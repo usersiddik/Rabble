@@ -32,6 +32,7 @@ export default function CategoryShowcase({ atelierImage }: { atelierImage?: stri
   const [labHover, setLabHover] = useState(false);
 
   const printSpecs = [tee.print.method, `${tee.print.gsm} GSM`, `Run of ${tee.runSize}`];
+  const men = byGender("men").filter((g) => g.status === "live");
   const women = byGender("women").filter((g) => g.status === "live");
   const atelierTags = [...new Set(women.map((g) => KIND_LABEL[g.art.kind]))];
   const hood = getGarment("sunstrike-crop-hood")!;
@@ -60,7 +61,7 @@ export default function CategoryShowcase({ atelierImage }: { atelierImage?: stri
       <section className="mx-auto max-w-7xl px-4 py-[var(--space-section)] sm:px-6" aria-labelledby="mood-heading">
         <Reveal className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="label text-steel-deep">Two moods, one crowd</p>
+            <p className="label text-steel-deep">Men &amp; women — two moods, one crowd</p>
             <h2 id="mood-heading" className="display display-md mt-2">
               Pick your noise
             </h2>
@@ -84,7 +85,9 @@ export default function CategoryShowcase({ atelierImage }: { atelierImage?: stri
               <div className="relative grid min-h-[30rem] grid-cols-[minmax(0,1fr)_auto] md:min-h-[36rem]">
                 <div className="relative z-10 flex flex-col justify-between p-6 md:p-8">
                   <div>
-                    <p className="label text-alabaster/60">Front &amp; back printed tees</p>
+                    <p className="label text-alabaster/60">
+                      Men <span aria-hidden className="mx-1 text-alabaster/30">/</span> Front &amp; back printed
+                    </p>
                     <h3 className="display mt-3 text-4xl md:text-6xl">
                       The
                       <br />
@@ -94,6 +97,7 @@ export default function CategoryShowcase({ atelierImage }: { atelierImage?: stri
                     </h3>
                   </div>
                   <div>
+                    <p className="micro mb-3 text-alabaster/55">{men.length} pieces on the rail</p>
                     <ul className="flex flex-wrap gap-2">
                       {printSpecs.map((t) => (
                         <li key={t} className="micro rounded-full border border-alabaster/25 px-3 py-1.5 text-alabaster/90">
@@ -101,9 +105,7 @@ export default function CategoryShowcase({ atelierImage }: { atelierImage?: stri
                         </li>
                       ))}
                     </ul>
-                    <p className="label mt-6 text-alabaster/70 transition-colors group-hover:text-cobalt-light">
-                      {labHover ? "Back print →" : "Front print →"}
-                    </p>
+                    <p className="label mt-6 text-alabaster transition-colors group-hover:text-cobalt-light">Shop men →</p>
                   </div>
                 </div>
 
@@ -156,21 +158,24 @@ export default function CategoryShowcase({ atelierImage }: { atelierImage?: stri
                 </m.div>
                 <div className="absolute inset-0 bg-gradient-to-t from-ivory via-ivory/50 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
-                  <p className="label text-steel-deep">Women&rsquo;s boutique collection</p>
+                  <p className="label text-steel-deep">
+                    Women <span aria-hidden className="mx-1 text-carbon/25">/</span> Boutique collection
+                  </p>
                   <h3 className="display mt-3 text-4xl md:text-6xl">
                     The Atelier <span className="serif-note lowercase text-terracotta">edit</span>
                   </h3>
                   <p className="serif-note mt-3 max-w-xs text-lg text-carbon-2">
                     Cut for her, printed front and back, made in runs of a few hundred.
                   </p>
-                  <ul className="mt-5 flex flex-wrap gap-2">
+                  <p className="micro mt-5 text-steel-deep">{women.length} pieces on the rail</p>
+                  <ul className="mt-3 flex flex-wrap gap-2">
                     {atelierTags.map((t) => (
                       <li key={t} className="micro rounded-full border border-carbon/20 bg-ivory/70 px-3 py-1.5 text-carbon-2 backdrop-blur-sm">
                         {t}
                       </li>
                     ))}
                   </ul>
-                  <p className="label mt-6 text-carbon transition-colors group-hover:text-terracotta">Enter the atelier →</p>
+                  <p className="label mt-6 text-carbon transition-colors group-hover:text-terracotta">Shop women →</p>
                 </div>
               </div>
             </Link>

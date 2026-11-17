@@ -39,6 +39,7 @@ interface Sizes {
 }
 // keep in step with `.rack` in globals.css
 const DESKTOP: Sizes = { active: 380, side: 108, gap: 10 };
+const LAPTOP: Sizes = { active: 300, side: 88, gap: 8 };
 const TABLET: Sizes = { active: 340, side: 96, gap: 8 };
 const MOBILE: Sizes = { active: 228, side: 66, gap: 4 };
 
@@ -46,16 +47,15 @@ const MOBILE: Sizes = { active: 228, side: 66, gap: 4 };
 function useSizes(): Sizes | null {
   const [sizes, setSizes] = useState<Sizes | null>(null);
   useEffect(() => {
+    const mqLaptop = window.matchMedia("(min-width: 1024px) and (max-height: 900px)");
     const mqDesktop = window.matchMedia("(min-width: 1024px)");
     const mqTablet = window.matchMedia("(min-width: 640px)");
-    const apply = () => setSizes(mqDesktop.matches ? DESKTOP : mqTablet.matches ? TABLET : MOBILE);
+    const queries = [mqLaptop, mqDesktop, mqTablet];
+    const apply = () =>
+      setSizes(mqLaptop.matches ? LAPTOP : mqDesktop.matches ? DESKTOP : mqTablet.matches ? TABLET : MOBILE);
     apply();
-    mqDesktop.addEventListener("change", apply);
-    mqTablet.addEventListener("change", apply);
-    return () => {
-      mqDesktop.removeEventListener("change", apply);
-      mqTablet.removeEventListener("change", apply);
-    };
+    queries.forEach((mq) => mq.addEventListener("change", apply));
+    return () => queries.forEach((mq) => mq.removeEventListener("change", apply));
   }, []);
   return sizes;
 }
@@ -281,6 +281,7 @@ export default function GarmentRack() {
   const piece = RACK[active];
   const g = piece.garment;
   const collection = g.gender === "women" ? "/women" : "/men";
+  const audience = g.gender === "women" ? "Women" : g.gender === "men" ? "Men" : "Unisex";
   const hasBackPrint = Boolean(g.print.back);
 
   // the Front | Back indicator slides between the measured buttons
@@ -341,7 +342,7 @@ export default function GarmentRack() {
 
         {/* ——— active garment: title, spec, Front | Back, CTAs ——— */}
         <div className="mx-auto flex max-w-7xl flex-col items-center px-4 text-center sm:px-6">
-          <div className="relative h-[4.5rem] w-full max-w-xl" aria-live="polite">
+          <div className="relative h-[5.75rem] w-full max-w-xl" aria-live="polite">
             <AnimatePresence mode="wait" initial={false}>
               <m.div
                 key={g.slug}
@@ -351,7 +352,10 @@ export default function GarmentRack() {
                 transition={{ duration: 0.3, ease: EASE_OUT }}
                 className="absolute inset-0"
               >
-                <h2 className="display text-2xl md:text-3xl">{g.name}</h2>
+                <p className="label text-steel-deep">
+                  {audience} <span aria-hidden className="mx-1 text-carbon/25">/</span> {g.category}
+                </p>
+                <h2 className="display mt-1.5 text-2xl md:text-3xl">{g.name}</h2>
                 <p className="tabular mt-1.5 text-sm text-steel-deep">
                   {piece.spec} ·{" "}
                   {g.compareAt && <span className="mr-1 line-through">{formatINR(g.compareAt)}</span>}
@@ -413,7 +417,7 @@ export default function GarmentRack() {
               ←
             </button>
             <Link href={collection} className="btn btn-carbon">
-              Shop the collection
+              {audience === "Unisex" ? "Shop the collection" : `Shop ${audience.toLowerCase()}`}
             </Link>
             <button
               type="button"
@@ -486,10 +490,10 @@ export function HeroEditorialBanner({ image, alt = "" }: { image?: string; alt?:
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link href="/men" className="btn btn-alabaster">
-                Printed tees
+                Shop men
               </Link>
               <Link href="/women" className="btn btn-ghost !border-alabaster/50 !text-alabaster hover:!bg-alabaster hover:!text-carbon">
-                Women&rsquo;s boutique
+                Shop women
               </Link>
             </div>
           </div>

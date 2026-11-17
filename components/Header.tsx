@@ -62,7 +62,7 @@ export default function Header() {
           Skip to content
         </a>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <nav aria-label="Primary" className="hidden flex-1 items-center gap-7 md:flex">
+          <nav aria-label="Primary" className="hidden flex-1 items-center gap-7 lg:flex">
             {nav.primary.map((item) => (
               <Link key={item.href} href={item.href} className={linkCls(item.href)} aria-current={pathname === item.href ? "page" : undefined}>
                 {item.label}
@@ -71,7 +71,7 @@ export default function Header() {
           </nav>
           <button
             type="button"
-            className="flex-1 text-left md:hidden"
+            className="flex-1 text-left lg:hidden"
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
             onClick={() => setMenuOpen((v) => !v)}
@@ -110,9 +110,12 @@ export default function Header() {
         {pathname === "/" && !menuOpen && (
           <div className="border-t hairline">
             <p className="mx-auto max-w-7xl px-4 py-2 text-center text-[0.65rem] uppercase tracking-[0.2em] text-carbon-2 sm:px-6 sm:text-xs">
-              {nav.micro[0]}
-              <span className="mx-3 text-carbon/30" aria-hidden>
-                |
+              {/* phones get the second line only, so the bar stays one line tall */}
+              <span className="hidden sm:inline">
+                {nav.micro[0]}
+                <span className="mx-3 text-carbon/30" aria-hidden>
+                  |
+                </span>
               </span>
               {nav.micro[1]}
             </p>
@@ -120,7 +123,7 @@ export default function Header() {
         )}
 
         {menuOpen && (
-          <div id="mobile-menu" className="border-t hairline bg-alabaster md:hidden">
+          <div id="mobile-menu" className="border-t hairline bg-alabaster lg:hidden">
             <nav aria-label="Mobile" className="flex flex-col px-4 py-6">
               {[...nav.primary, ...nav.secondary, { href: "/bag", label: "Bag" }].map((item, i) => (
                 <Link

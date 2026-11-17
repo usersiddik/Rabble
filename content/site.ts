@@ -37,18 +37,18 @@ export const ticker = [
 export const nav = {
   /** desktop header, left */
   primary: [
-    { href: "/men", label: "Printed Tees" },
-    { href: "/women", label: "Women's Boutique" },
-    { href: "/new-arrivals", label: "New Drops" },
+    { href: "/men", label: "Men" },
+    { href: "/women", label: "Women" },
+    { href: "/new-arrivals", label: "New arrivals" },
+    { href: "/drop", label: "Drop 02" },
   ],
   /** mobile menu, after primary (desktop reaches these from the footer) */
   secondary: [
-    { href: "/drop", label: "Drop 02" },
     { href: "/lookbook", label: "Lookbook" },
     { href: "/about", label: "About" },
   ],
   /** micro-header under the nav on the homepage */
-  micro: ["New collection", "Premium printed tees & boutique wear"],
+  micro: ["New collection", "Printed tees & boutique wear · Men & women"],
 } as const;
 
 export const footerColumns = [

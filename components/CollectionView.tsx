@@ -131,7 +131,7 @@ export default function CollectionView({ title, tagline, blurb, garments }: Coll
               <p className={`label ${d.status === "live" ? "text-terracotta" : "text-cobalt"}`}>
                 {d.code} — {d.name}
               </p>
-              <h2 id={`chapter-${d.number}`} className="display mt-1 text-3xl md:text-4xl">
+              <h2 id={`chapter-${d.number}`} className="display mt-1 scroll-mt-48 text-3xl md:text-4xl">
                 {d.status === "live" ? "On the rail now" : "On the way"}
               </h2>
             </div>

@@ -27,7 +27,7 @@ export default function Home() {
         <h1 id="rack-heading" className="sr-only">
           Rabble — {live.code} {live.name}, live now. Front and back printed tees and boutique wear, on the rack.
         </h1>
-        <div className="relative pb-12 pt-8 md:pb-16 md:pt-10">
+        <div className="relative pb-12 pt-8 md:pb-16">
           <GarmentRack />
         </div>
         <HeroEditorialBanner />
@@ -131,7 +131,7 @@ export default function Home() {
                     See the drop
                   </Link>
                   <Link
-                    href="/new-arrivals?drop=2"
+                    href="/new-arrivals#chapter-2"
                     className="btn btn-ghost !border-alabaster/30 !text-alabaster hover:!bg-alabaster hover:!text-carbon"
                   >
                     The pieces
