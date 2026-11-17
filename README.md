@@ -1,20 +1,32 @@
 # RABBLE
 
-Concept e-commerce experience for **RABBLE** — a contemporary fashion brand for men and
-women, aimed at 18–30 year olds in India. *Noise you can wear.*
+Concept e-commerce experience for **RABBLE** — India's D2C home for **front & back printed
+graphic tees** and a **curated women's boutique edit**, aimed at 18–30 year olds. *Noise you can wear.*
 
 ## Stack
 
 - Next.js (App Router, static prerender) + TypeScript
 - Tailwind CSS v4 (design tokens in `app/globals.css`)
-- No animation libraries — custom pendulum physics, IntersectionObserver reveals, CSS transitions
+- Framer Motion for the rack physics (spring accordion, side-profile tilt, hanger sway, Front/Back flips);
+  IntersectionObserver reveals and CSS transitions everywhere else
 
 ## Signature pieces
 
-- **The hanging rail** (`components/HangingRail.tsx` + `GarmentArt.tsx`): a draggable
-  steel rail of illustrated garments on wooden hangers with damped-pendulum swing physics,
-  hang-tags and an active-item caption.
-- Chalk / ink / cobalt palette, Archivo (expanded) + Instrument Serif type system.
+- **The garment rack hero** (`components/GarmentRack.tsx`): a full-width matte-steel rail with
+  seven garments on wooden hangers. Inactive pieces hang in a compressed side profile
+  (`rotateY(55deg) scaleX(0.55)`); hover/tap springs one to the front, neighbours glide apart with
+  a pendulum micro-sway, and a **Front | Back** pill (or a second tap) flips the piece 180° to its
+  back print. Drag / swipe to browse; keyboard accessible.
+- **`<GarmentCutout />`** (`components/GarmentCutout.tsx`): procedural studio garment renders —
+  fabric grain, fold shading, rib trims, seam stitching, hook tags — with `front`, `back` and
+  `side` views and original print artwork. Pass `frontImage` / `backImage` / `sidePreview`
+  (transparent cutout photography) to swap in real product shots per piece (`lib/rack.ts`).
+- Dual-mood showcase: **The Print Lab** (tee flips to its back print on hover) and
+  **The Atelier Edit** (women's boutique, pointer parallax).
+- Product cards with a Front | Back pill, hover auto-flip and a slide-up quick-add size bar;
+  craftsmanship & India D2C trust strip; ⌘K search overlay.
+- Studio alabaster / carbon ink / brushed steel palette with terracotta & cobalt accents,
+  Archivo (expanded) + Instrument Serif type system.
 - Full shopping flow: collections with filters & sorting, product pages with size guide,
   bag drawer and bag page (persisted to `localStorage`).
 

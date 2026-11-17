@@ -18,6 +18,15 @@
   --color-clay: #b06c43;
   --color-butter: #e9c05c;
   --color-blush: #c9a0b4;
+  /* studio / rack palette */
+  --color-studio: #f6f5f0;
+  --color-studio-2: #edeae2;
+  --color-carbon: #111111;
+  --color-steel: #8e8e93;
+  --color-cobalt: #2438e8;
+  --color-terracotta: #c4623e;
+  --color-sand: #e8dfd0;
+  --color-ivory: #f8f4ec;
 
   --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
@@ -234,6 +243,79 @@ body {
   background: var(--color-accent);
 }
 
+/* ——— glass header ——— */
+
+.glass {
+  background: color-mix(in srgb, var(--color-studio) 84%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  backdrop-filter: saturate(160%) blur(14px);
+}
+
+/* ——— garment rail ——— */
+
+.rail-bar {
+  background: linear-gradient(180deg, #7c7c81 0%, #4b4b50 30%, #2a2a2d 65%, #141416 100%);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.5) inset,
+    0 2px 4px rgb(0 0 0 / 0.28),
+    0 10px 18px rgb(0 0 0 / 0.08);
+}
+.rail-bracket {
+  position: absolute;
+  top: -9px;
+  width: 14px;
+  height: 24px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #3a3a3d, #8e8e93 50%, #3a3a3d);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.3);
+}
+.rail-bracket::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 9999px;
+  background: #1a1a1c;
+  box-shadow: 0 12px 0 #1a1a1c;
+}
+
+.garment-shadow {
+  filter: drop-shadow(0 25px 35px rgb(0 0 0 / 0.14)) drop-shadow(0 4px 6px rgb(0 0 0 / 0.08));
+}
+
+/* ——— flip cards (product grid) ——— */
+
+.flip-scene {
+  perspective: 1200px;
+}
+.flip-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.flip-card.is-back {
+  transform: rotateY(180deg);
+}
+.flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-face--back {
+  transform: rotateY(180deg);
+}
+@media (hover: hover) {
+  .flip-scene:hover .flip-card:not(.is-front) {
+    transform: rotateY(180deg);
+  }
+}
+
 /* ——— misc ——— */
 
 .no-scrollbar {
@@ -258,6 +340,9 @@ body {
     transition: none;
   }
   .img-frame img {
+    transition: none;
+  }
+  .flip-card {
     transition: none;
   }
 }
