@@ -2,6 +2,10 @@
 
 Screenshots per area, captured from `next start` with headless Chrome at 1440px (desktop) and a true 390px layout (mobile).
 Re-capture after changes: build, `npx next start -p 3100`, then shoot with `--force-prefers-reduced-motion` so reveals are settled.
+The home and rack shots predate the Men · Women nav and the rack's All | Men | Women filters.
+
+How the rack hero reached `main`, with its decisions and Lighthouse results: [rack-hero-integration.md](rack-hero-integration.md).
+The original standalone GSAP storefront is archived at the git tag `archive/fable-gsap-storefront`.
 
 | # | Area | Desktop | Mobile |
 | - | ---- | ------- | ------ |
