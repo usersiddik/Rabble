@@ -194,7 +194,7 @@ export default function BrandPage() {
       {/* ——— type ——— */}
       <Section id="type" kicker="04" title="Type scale">
         <p className="prose-editorial max-w-xl">
-          Archivo Expanded ExtraBold (a 38 KB static instance, self-hosted) for anything that shouts. Instrument Serif italic for the aside, the breath, the soft landing. Body is Archivo at normal width, weight axis only.
+          Archivo Expanded ExtraBold (a 15 KB static latin instance, self-hosted) for anything that shouts. Instrument Serif italic for the aside, the breath, the soft landing. Body is Archivo at normal width, weight axis only.
         </p>
         <div className="mt-8 divide-y hairline border-y hairline">
           {TYPE.map((t) => (

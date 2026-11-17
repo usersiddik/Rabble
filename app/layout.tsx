@@ -16,9 +16,9 @@ const archivo = Archivo({
   display: "swap",
 });
 
-/** display face: a static Archivo Expanded 800 instance (38 KB) so the hero paints early */
+/** display face: a static, latin-subset Archivo Expanded 800 instance (~20 KB) so the hero paints early */
 const archivoDisplay = localFont({
-  src: "../assets/fonts/Archivo-Expanded-ExtraBold.woff",
+  src: "../assets/fonts/Archivo-Expanded-ExtraBold-latin.woff2",
   weight: "800",
   style: "normal",
   variable: "--font-archivo-display",
@@ -26,12 +26,14 @@ const archivoDisplay = localFont({
   adjustFontFallback: "Arial",
 });
 
+/** serif is for asides, never the LCP: don't preload it ahead of the display face */
 const instrument = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
   style: ["normal", "italic"],
   variable: "--font-instrument",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {

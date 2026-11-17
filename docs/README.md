@@ -16,6 +16,18 @@ Re-capture after changes: build, `npx next start -p 3100`, then shoot with `--fo
 | 6 | Trust & legal: FAQ, shipping & returns, footer | [08-faq-desktop](screenshots/08-faq-desktop.png) | [08-shipping-mobile](screenshots/08-shipping-mobile.png) |
 | 7 | Open Graph: site, product, waitlist product | [09-og-home](screenshots/09-og-home.png) · [09-og-product](screenshots/09-og-product.png) · [09-og-waitlist](screenshots/09-og-waitlist.png) | — |
 
+## Lighthouse (mobile, simulated throttling, `next start`, 2026-11-17)
+
+| Route | Performance | Accessibility | Best practices | SEO |
+| ----- | ----------- | ------------- | -------------- | --- |
+| `/` | 100 | 100 | 100 | 100 |
+| `/new-arrivals` | 95 | 100 | 100 | 100 |
+| `/product/reprint-tee-01` | 96 | 100 | 100 | 100 |
+| `/about` | 96 | 100 | 100 | 100 |
+| `/drop` | 96 | 100 | 100 | 100 |
+
+What moved the needle: above-the-fold text uses the CSS-only `.rise` entrance instead of the JS-driven `<Reveal>`; the display face is a self-hosted 15 KB static Archivo Expanded instance instead of the 90 KB variable font; the rupee sign is served from a system face so pricing never pulls Google's latin-ext subset; the serif is not preloaded; small text uses `--color-steel-deep` / `--color-cobalt-light` for AA contrast.
+
 ## Content system (area 8)
 
 Everything editorial lives in `content/`:

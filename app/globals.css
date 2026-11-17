@@ -28,9 +28,9 @@
   --color-cobalt-light: #8fa0ff;
 
   /* — type — */
-  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-archivo-display), var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
+  --font-sans: "Rupee", var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Rupee", var(--font-archivo-display), var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Rupee", var(--font-instrument), ui-serif, Georgia, serif;
 
   --text-display-xl: clamp(3.25rem, 10vw, 8.5rem);
   --text-display-lg: clamp(2.5rem, 6vw, 5rem);
@@ -71,6 +71,16 @@
   /* — elevation — */
   --shadow-lift: 0 1px 2px rgb(17 17 17 / 0.06), 0 12px 32px -12px rgb(17 17 17 / 0.18);
   --shadow-float: 0 24px 60px -20px rgb(17 17 17 / 0.35);
+}
+
+/*
+  The rupee sign (U+20B9) lives in Google's latin-ext subset, so a single "₹" would
+  pull a 32 KB extra Archivo file onto every priced page. Serve it from a system face instead.
+*/
+@font-face {
+  font-family: "Rupee";
+  src: local("Helvetica Neue"), local("Arial"), local("Roboto"), local("Segoe UI"), local("Noto Sans");
+  unicode-range: U+20B9;
 }
 
 :root {
