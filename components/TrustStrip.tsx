@@ -26,7 +26,7 @@ export default function TrustStrip() {
       icon: icon(<path d="M4 7h16M4 12h16M4 17h16" />),
     },
     {
-      title: "Front & back screen prints",
+      title: "Screen printed in Bengaluru",
       body: "Printed in one Bengaluru studio — water-based and discharge inks on the tees, so the print softens with washing instead of cracking.",
       icon: icon(
         <>

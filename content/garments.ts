@@ -506,6 +506,14 @@ export const garments: Garment[] = [
 
 export const categories: Category[] = ["Tees", "Sweats & Hoods", "Jackets"];
 
+/** URL form of a category ("Sweats & Hoods" → "sweats-hoods"), read by `?category=` on collection pages */
+export function categorySlug(category: Category): string {
+  return category
+    .toLowerCase()
+    .replace(/&/g, "")
+    .replace(/\s+/g, "-");
+}
+
 export function getGarment(slug: string): Garment | undefined {
   return garments.find((g) => g.slug === slug);
 }

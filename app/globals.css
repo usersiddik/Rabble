@@ -637,7 +637,7 @@ body {
   animation: viewer-turn-in 0.3s cubic-bezier(0.215, 0.61, 0.355, 1) both;
 }
 
-/* ——— flip card (front | back) ——— */
+/* ——— flip card: tees turn to their back print on hover ——— */
 
 .flip {
   perspective: 1400px;
@@ -647,11 +647,8 @@ body {
   transform-style: preserve-3d;
   transition: transform 0.7s var(--ease-out);
 }
-.flip.is-back .flip-inner {
-  transform: rotateY(180deg);
-}
 @media (hover: hover) {
-  .flip:not(.is-front):hover .flip-inner {
+  .flip:hover .flip-inner {
     transform: rotateY(180deg);
   }
 }

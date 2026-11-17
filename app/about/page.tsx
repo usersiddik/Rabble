@@ -13,7 +13,7 @@ import { site } from "@/content/site";
 export const metadata: Metadata = {
   title: "The manifesto",
   description:
-    "Why front and back prints, why boutique, why India first. RABBLE is what happens when the crowd gets a point of view.",
+    "Why print, why boutique, why India first. RABBLE is what happens when the crowd gets a point of view.",
   alternates: { canonical: "/about" },
 };
 
@@ -104,9 +104,9 @@ export default function AboutPage() {
                       href={`/product/${g!.slug}`}
                       className={`group block aspect-[4/5] p-[10%] ${dark ? "studio-dark grain" : "studio grain grain-light"} ${j === 1 ? "mt-10" : ""}`}
                     >
-                      <GarmentCutout garment={g!} side={j === 0 ? "front" : "back"} className="h-full w-full transition-transform duration-[var(--duration-slow)] group-hover:scale-[1.03]" />
+                      <GarmentCutout garment={g!} side="front" className="h-full w-full transition-transform duration-[var(--duration-slow)] group-hover:scale-[1.03]" />
                       <p className={`micro mt-2 text-center ${dark ? "text-alabaster/50" : "text-steel-deep"}`}>
-                        {g!.name} · {j === 0 ? "front" : "back"}
+                        {g!.name} · {g!.color}
                       </p>
                     </Link>
                   ))}

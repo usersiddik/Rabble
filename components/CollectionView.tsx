@@ -6,7 +6,7 @@ import FlipCard from "./FlipCard";
 import JoinDrop from "./JoinDrop";
 import { NoiseDivider } from "./Noise";
 import Reveal from "./Reveal";
-import type { Category, Garment } from "@/content/garments";
+import { categorySlug, type Category, type Garment } from "@/content/garments";
 import { drops } from "@/content/drops";
 
 type SortKey = "newest" | "price-asc" | "price-desc";
@@ -45,6 +45,14 @@ export default function CollectionView({ title, tagline, blurb, garments }: Coll
     for (const g of garments) set.add(g.category);
     return [...set];
   }, [garments]);
+
+  // a category link (/men?category=tees) sets the filter once the page is live
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get("category");
+    const match = availableCategories.find((c) => categorySlug(c) === wanted);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (match) setCategory(match);
+  }, [availableCategories]);
 
   const visible = useMemo(() => {
     let list = category === "All" ? garments : garments.filter((g) => g.category === category);

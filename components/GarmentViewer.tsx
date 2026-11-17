@@ -90,23 +90,6 @@ export default function GarmentViewer({ garment }: { garment: Garment }) {
             {garment.stockNote ?? BADGE_LABEL[garment.badge]}
           </span>
         )}
-        {views.includes("back") && (
-          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 rounded-full border hairline bg-alabaster/90 p-0.5 backdrop-blur-sm">
-            {(["front", "back"] as const).map((s) => (
-              <button
-                key={s}
-                type="button"
-                aria-pressed={side === s}
-                onClick={() => select(s)}
-                className={`label rounded-full px-4 py-2 transition-colors ${
-                  side === s ? "bg-carbon text-alabaster" : "text-carbon-2 hover:text-carbon"
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        )}
         {!garment.frontImage && (
           <p className={`micro absolute right-4 top-4 ${dark ? "text-alabaster/60" : "text-steel-deep"}`}>{garment.status === "waitlist" ? "Illustrated proof" : "Illustrated — photography soon"}</p>
         )}

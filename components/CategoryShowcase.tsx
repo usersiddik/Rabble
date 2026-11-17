@@ -88,7 +88,7 @@ export default function CategoryShowcase({ atelierImage }: { atelierImage?: stri
                 <div className="relative z-10 flex flex-col justify-between p-6 md:p-8">
                   <div>
                     <p className="label text-alabaster/60">
-                      Men <span aria-hidden className="mx-1 text-alabaster/30">/</span> Front &amp; back printed
+                      Men <span aria-hidden className="mx-1 text-alabaster/30">/</span> Printed tees &amp; heavyweights
                     </p>
                     <h3 className="display mt-3 text-4xl md:text-6xl">
                       The
@@ -133,9 +133,6 @@ export default function CategoryShowcase({ atelierImage }: { atelierImage?: stri
                   </m.div>
                 </div>
               </div>
-              <span aria-hidden className="micro absolute bottom-6 right-6 z-10 rounded-full border border-alabaster/30 px-3 py-1.5 text-alabaster/80">
-                {labHover ? "Back" : "Front"}
-              </span>
             </Link>
           </Reveal>
 
@@ -167,7 +164,7 @@ export default function CategoryShowcase({ atelierImage }: { atelierImage?: stri
                     The Atelier <span className="serif-note lowercase text-terracotta">edit</span>
                   </h3>
                   <p className="serif-note mt-3 max-w-xs text-lg text-carbon-2">
-                    Cut for her, printed front and back, made in runs of a few hundred.
+                    Cut for her, printed in Bengaluru, made in runs of a few hundred.
                   </p>
                   <p className="micro mt-5 text-steel-deep">{women.length} pieces on the rail</p>
                   <ul className="mt-3 flex flex-wrap gap-2">

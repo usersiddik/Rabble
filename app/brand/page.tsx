@@ -32,10 +32,10 @@ const COLORS = [
 
 const TYPE = [
   { cls: "display display-xl", label: "Display XL", token: "--text-display-xl", sample: "Noise" },
-  { cls: "display display-lg", label: "Display LG", token: "--text-display-lg", sample: "Front says hello." },
+  { cls: "display display-lg", label: "Display LG", token: "--text-display-lg", sample: "Made once. Worn loud." },
   { cls: "display display-md", label: "Display MD", token: "--text-display-md", sample: "New this week" },
   { cls: "display display-sm", label: "Display SM", token: "--text-display-sm", sample: "Print spec" },
-  { cls: "serif-note text-[var(--text-note-lg)]", label: "Note LG", token: "--text-note-lg", sample: "Back says goodbye." },
+  { cls: "serif-note text-[var(--text-note-lg)]", label: "Note LG", token: "--text-note-lg", sample: "Cut for her, printed in Bengaluru." },
   { cls: "serif-note text-[var(--text-note)]", label: "Note", token: "--text-note", sample: "Give the rail a drag." },
   { cls: "prose-editorial", label: "Body LG", token: "--text-body-lg", sample: "Heavyweight fabric, honest cuts, colours that commit." },
   { cls: "text-[var(--text-body)]", label: "Body", token: "--text-body", sample: "Cold wash, inside out, line dry." },

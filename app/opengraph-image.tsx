@@ -10,6 +10,6 @@ export default async function Image() {
     kicker: "Drop 01 — live",
     title: "Noise you can",
     note: "wear.",
-    meta: "Front & back prints · Designed in India · UPI · COD",
+    meta: "Men & women · Designed in India · UPI · COD",
   });
 }

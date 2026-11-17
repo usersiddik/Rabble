@@ -2,15 +2,15 @@ import Link from "next/link";
 import CategoryShowcase from "@/components/CategoryShowcase";
 import DropCountdown from "@/components/DropCountdown";
 import FlipCard from "@/components/FlipCard";
-import GarmentCutout from "@/components/GarmentCutout";
 import GarmentRack, { HeroEditorialBanner } from "@/components/GarmentRack";
 import JoinDrop from "@/components/JoinDrop";
 import Marquee from "@/components/Marquee";
 import { NoiseBars, NoiseDivider } from "@/components/Noise";
 import Parallax from "@/components/Parallax";
 import Reveal from "@/components/Reveal";
+import ShopByCategory from "@/components/ShopByCategory";
 import TrustStrip from "@/components/TrustStrip";
-import { getGarment, liveGarments } from "@/content/garments";
+import { liveGarments } from "@/content/garments";
 import { currentDrop, nextDrop } from "@/content/drops";
 import { ticker } from "@/content/site";
 
@@ -18,7 +18,6 @@ export default function Home() {
   const live = currentDrop();
   const next = nextDrop();
   const fresh = [...liveGarments()].sort((a, b) => b.order - a.order).slice(0, 4);
-  const hero = getGarment("reprint-tee-01")!;
 
   return (
     <>
@@ -26,7 +25,7 @@ export default function Home() {
       <section className="relative bg-alabaster" aria-labelledby="rack-heading">
         <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-alabaster-2/80 to-transparent" />
         <h1 id="rack-heading" className="sr-only">
-          Rabble — {live.code} {live.name}, live now. Front and back printed tees and boutique wear, on the rack.
+          Rabble — {live.code} {live.name}, live now. Printed tees and boutique wear for men and women, on the rack.
         </h1>
         <div className="relative pb-12 pt-5 md:pb-16 md:pt-4">
           <GarmentRack />
@@ -56,40 +55,8 @@ export default function Home() {
 
       <NoiseDivider className="mx-auto max-w-7xl px-4 sm:px-6" seed={2} label="Drop 01" />
 
-      {/* ——— front & back ——— */}
-      <section className="mx-auto max-w-7xl px-4 py-[var(--space-section)] sm:px-6" aria-labelledby="fb-heading">
-        <div className="grid items-center gap-10 md:grid-cols-2 md:gap-16">
-          <Reveal className="order-2 md:order-1">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="studio grain grain-light aspect-[4/5] p-[10%]">
-                <GarmentCutout garment={hero} side="front" className="h-full w-full" />
-                <p className="micro mt-2 text-center text-steel-deep">Front — the question</p>
-              </div>
-              <div className="studio-dark grain aspect-[4/5] p-[10%] md:mt-10">
-                <GarmentCutout garment={hero} side="back" className="h-full w-full" />
-                <p className="micro mt-2 text-center text-alabaster/50">Back — the answer</p>
-              </div>
-            </div>
-          </Reveal>
-          <Reveal delay={100} className="order-1 md:order-2">
-            <p className="label text-steel-deep">Why two prints</p>
-            <Reveal variant="mask" delay={140} className="mt-3">
-              <h2 id="fb-heading" className="display display-lg">
-                Front says hello.
-                <br />
-                <span className="serif-note lowercase text-terracotta">Back says goodbye.</span>
-              </h2>
-            </Reveal>
-            <p className="prose-editorial mt-6 max-w-md">
-              A garment is seen from behind for most of its life. So every Rabble piece carries a small signal on the
-              chest and a broadcast across the back. Never the same artwork at two sizes.
-            </p>
-            <Link href="/about#front-and-back" className="label mt-8 inline-block hover:text-terracotta">
-              Read why →
-            </Link>
-          </Reveal>
-        </div>
-      </section>
+      {/* ——— shop by category ——— */}
+      <ShopByCategory />
 
       {/* ——— new this week ——— */}
       <section className="mx-auto max-w-7xl px-4 pb-[var(--space-section)] sm:px-6" aria-labelledby="new-heading">

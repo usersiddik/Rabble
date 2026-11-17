@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import GarmentCutout from "./GarmentCutout";
 import { useCart } from "@/lib/cart";
-import { badgeLabel, formatINR, hasSide, type Garment, type Side } from "@/content/garments";
+import { badgeLabel, formatINR, hasSide, type Garment } from "@/content/garments";
 
 const QUICK_SIZES = ["S", "M", "L", "XL"];
 
@@ -16,17 +16,16 @@ interface FlipCardProps {
 }
 
 /**
- * Collection card. Front by default, back on hover (pointer devices) or via the
- * Front | Back switch, which also serves keyboard and touch users. Live pieces get
- * a slide-up quick-add size bar on hover / keyboard focus.
+ * Collection card. Tees with a back print turn to it on hover (pointer devices) —
+ * the two-view showcase is for T-shirts; everything else shows its front. The
+ * product page has every view. Live pieces get a slide-up quick-add size bar on
+ * hover / keyboard focus.
  */
 export default function FlipCard({ garment, priority = false, showDrop = false }: FlipCardProps) {
   const { add } = useCart();
-  const [side, setSide] = useState<Side | null>(null);
   const [added, setAdded] = useState<string | null>(null);
   const addedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const canFlip = hasSide(garment, "back");
-  const stateClass = side === "back" ? "is-back" : side === "front" ? "is-front" : "";
+  const canFlip = garment.category === "Tees" && hasSide(garment, "back");
   const waitlist = garment.status === "waitlist";
   const badge = badgeLabel(garment);
   const quickSizes = garment.sizes.filter((s) => QUICK_SIZES.includes(s));
@@ -42,7 +41,7 @@ export default function FlipCard({ garment, priority = false, showDrop = false }
 
   return (
     <article className="group">
-      <div className={`studio grain-light grain relative aspect-[4/5] overflow-hidden ${canFlip ? "flip" : ""} ${stateClass}`}>
+      <div className={`studio grain-light grain relative aspect-[4/5] overflow-hidden ${canFlip ? "flip" : ""}`}>
         <Link
           href={`/product/${garment.slug}`}
           className="absolute inset-0 z-[2] block p-[8%] outline-offset-[-4px]"
@@ -72,34 +71,9 @@ export default function FlipCard({ garment, priority = false, showDrop = false }
           </span>
         )}
 
-        {canFlip && (
-          <div
-            role="group"
-            aria-label={`View ${garment.name} from the front or back`}
-            className="absolute bottom-3 left-1/2 z-[3] flex -translate-x-1/2 rounded-full border hairline bg-alabaster/90 p-0.5 backdrop-blur-sm"
-          >
-            {(["front", "back"] as const).map((s) => {
-              const on = side === s || (side === null && s === "front");
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => setSide(s)}
-                  className={`micro rounded-full px-3 py-1.5 transition-colors ${
-                    on ? "bg-carbon text-alabaster" : "text-carbon-2 hover:text-carbon"
-                  }`}
-                >
-                  {s}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
         {/* quick-add size bar */}
         {garment.status === "live" && quickSizes.length > 0 && (
-          <div className={`pointer-events-none absolute inset-x-0 ${canFlip ? "bottom-12" : "bottom-2"} z-[3] translate-y-2 px-2 opacity-0 transition-[opacity,translate] duration-300 ease-[var(--ease-out)] group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100`}>
+          <div className={`pointer-events-none absolute inset-x-0 bottom-2 z-[3] translate-y-2 px-2 opacity-0 transition-[opacity,translate] duration-300 ease-[var(--ease-out)] group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100`}>
             <div role="group" aria-label={`Quick add ${garment.name}`} className="flex items-center justify-center gap-1 rounded-full bg-alabaster/95 p-1 shadow-[var(--shadow-lift)] backdrop-blur-sm lg:justify-start">
               <span className="micro hidden pl-3 pr-1 text-steel-deep lg:inline" aria-live="polite">
                 {added ? "Added" : "Quick add"}

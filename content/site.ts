@@ -6,7 +6,7 @@ export const site = {
   name: "RABBLE",
   tagline: "Noise you can wear",
   description:
-    "RABBLE is a front-and-back print label from India. Small batches, heavyweight cotton, one run per print. Designed in India for the loud majority.",
+    "RABBLE is a printed apparel label from Bengaluru: heavyweight tees, sweats and outerwear for men and women. Small batches, one run per print. Designed in India for the loud majority.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://rabble.in",
   locale: "en_IN",
   founded: 2026,
@@ -27,7 +27,8 @@ export const site = {
 
 export const ticker = [
   "Drop 01 is live",
-  "Front & back prints only",
+  "Menswear & womenswear",
+  "Heavyweight cotton",
   "One run per print — no restocks",
   "UPI · Cards · COD",
   "Free shipping over ₹1,999",
@@ -95,7 +96,7 @@ export const voice = {
   prints: {
     name: "Punchy",
     rule: "Short. Declarative. A little cocky. Three to eight words, no adjectives that don't earn their keep.",
-    examples: ["Noise you can wear.", "Front says hello. Back says goodbye.", "One run. Then it's gone."],
+    examples: ["Noise you can wear.", "Made once. Worn loud.", "One run. Then it's gone."],
   },
   boutique: {
     name: "Editorial",

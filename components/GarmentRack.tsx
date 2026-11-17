@@ -587,7 +587,7 @@ function Rail({ lineup, entrance }: { lineup: RackLineup; entrance: "siblings" |
                     onClick={openInspect}
                     className="label mt-4 underline decoration-carbon/30 underline-offset-4 hover:text-terracotta"
                   >
-                    Inspect front &amp; back<span className="sr-only">: {g.name}</span>
+                    Take a closer look<span className="sr-only">: {g.name}</span>
                   </button>
                   <p className="serif-note mt-5 text-sm text-steel-deep">Tap or hover a hanger · tap again to flip it · drag to browse</p>
                 </m.div>
@@ -690,7 +690,7 @@ export function HeroEditorialBanner({ image, alt = "" }: { image?: string; alt?:
           <div>
             <p className="label text-alabaster/70">Studio to street</p>
             <p className="display mt-2 max-w-xl text-2xl text-alabaster md:text-4xl">
-              Front &amp; back screen prints. <span className="serif-note lowercase text-sand">Boutique runs.</span> No restocks.
+              Heavyweight prints. <span className="serif-note lowercase text-sand">Boutique cuts.</span> No restocks.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link href="/men" className="btn btn-alabaster">

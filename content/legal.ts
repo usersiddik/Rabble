@@ -186,7 +186,7 @@ export const faq: { group: string; items: FaqItem[] }[] = [
   {
     group: "The garments",
     items: [
-      { q: "Why front and back?", a: "Because a garment is seen from behind for most of its life. Small signal on the chest, big broadcast on the back." },
+      { q: "Are men's and women's cut differently?", a: "Yes. Men's run regular to boxy; women's are boxy and slightly cropped, with more volume in the hood. Every product page lists measurements for each size." },
       { q: "How do I wash a printed piece?", a: "Cold, inside out, line dry. No tumble dryer, no iron on the ink. Water-based prints soften and crack a little with age — that's the point." },
       { q: "Will the ink fade?", a: "Water-based ink sinks into the cotton; it mellows rather than peels. Plastisol on the jackets stays sharp for years." },
     ],

@@ -21,21 +21,21 @@ export const manifesto = {
   opening: [
     "We make clothes for people who show up in numbers — to courtyards, weddings, protests, basement gigs and 2 a.m. chai runs.",
     "No logos shouting over your face. No beige minimalism pretending to be a personality. No ₹40,000 hoodies.",
-    "Heavyweight fabric, honest cuts, colours that commit. Printed front and back, in small runs, because scarcity should be real, not marketing.",
+    "Heavyweight fabric, honest cuts, colours that commit. Printed in small runs, because scarcity should be real, not marketing.",
   ],
 };
 
 export const sections: ManifestoSection[] = [
   {
-    id: "front-and-back",
-    kicker: "01 — Why front & back",
-    title: "Front says hello. Back says goodbye.",
+    id: "why-print",
+    kicker: "01 — Why print",
+    title: "Say something. Then make it last.",
     body: [
-      "Most printed clothing is designed for a mirror. One graphic, dead centre, calibrated for a selfie. We think a garment is seen from behind for most of its life — on a bike, in a queue, walking away from an argument you won.",
-      "So every Rabble piece carries two prints. A **signal on the chest**: small, specific, something you have to be close to read. And a **broadcast across the back**: large, legible from the next platform over.",
-      "The two are never the same artwork at two sizes. The front is the question, the back is the answer.",
+      "Most printed clothing is designed for a mirror: one graphic, dead centre, calibrated for a selfie and gone by wash ten. We'd rather make fewer pieces that still look right in year three.",
+      "So every Rabble print is drawn for its garment — where it sits, how big, which ink. A mark on the chest, a full print across the shoulders, sometimes both. **The artwork decides, not a template.**",
+      "Then we print it properly: water-based and discharge inks that sink into heavyweight cotton and soften with washing instead of cracking.",
     ],
-    pullQuote: "A garment is seen from behind for most of its life.",
+    pullQuote: "The artwork decides, not a template.",
     pieces: ["reprint-tee-01", "static-hoodie"],
   },
   {
@@ -68,9 +68,9 @@ export const sections: ManifestoSection[] = [
 export const founderNote = {
   kicker: "A note from the founder",
   body: [
-    "I started Rabble because every tee I loved had a graphic on the front and nothing to say on the way out. I wanted the walk-away to be the point.",
+    "I started Rabble because every tee I loved either faded by the tenth wash or looked like everyone else's. I wanted clothes with something to say, made well enough to keep saying it.",
     "We're small. There are three of us, one studio, and a printer who argues with us about ink coverage. We'd rather make ten things properly than a hundred things that end up in a sale bin.",
-    "If you're reading this before Drop 02 lands: thank you for finding us early. Join the waitlist, tell someone loud, and wear the back print like you mean it.",
+    "If you're reading this before Drop 02 lands: thank you for finding us early. Join the waitlist, tell someone loud, and wear it like you mean it.",
   ],
   signature: "Sid, founder",
   location: "Bengaluru, November 2026",
@@ -78,7 +78,7 @@ export const founderNote = {
 
 export const facts = [
   { title: "One run", body: "A few hundred pieces per print. Sold out means retired." },
-  { title: "Front & back", body: "Two prints on every piece. The question and the answer." },
+  { title: "Men & women", body: "Cut separately for both. Same runs, same ink, same care." },
   { title: "India first", body: "UPI, COD, pan-India shipping. Prices inclusive of GST." },
   { title: "Heavyweight", body: "240 GSM tees, 450 GSM fleece. Wash tests before vibe tests." },
 ];

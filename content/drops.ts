@@ -27,7 +27,7 @@ export const drops: Drop[] = [
     runSize: 2520,
     tagline: "The first broadcast.",
     blurb:
-      "Ten pieces, every one printed front and back in a single run. When a print sells through, the screens are destroyed.",
+      "Ten pieces for men and women, each printed in a single run. When a print sells through, the screens are destroyed.",
   },
   {
     number: 2,

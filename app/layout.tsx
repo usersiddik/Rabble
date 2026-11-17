@@ -45,7 +45,7 @@ export const metadata: Metadata = {
   },
   description: site.description,
   applicationName: site.name,
-  keywords: ["RABBLE", "front and back print", "screen printed tees India", "heavyweight hoodie India", "Bengaluru clothing brand", "UPI COD clothing"],
+  keywords: ["RABBLE", "printed t-shirts India", "screen printed tees India", "women's boutique wear India", "heavyweight hoodie India", "Bengaluru clothing brand", "UPI COD clothing"],
   openGraph: {
     type: "website",
     siteName: site.name,

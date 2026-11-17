@@ -16,7 +16,7 @@ const COLLECTIONS: Record<string, CollectionConfig> = {
   men: {
     title: "Men",
     tagline: "Make a scene.",
-    blurb: "Heavyweight basics and louder outerwear, printed front and back. Everything here goes with everything else — that's the whole trick.",
+    blurb: "Heavyweight basics and louder outerwear, screen printed in small runs. Everything here goes with everything else — that's the whole trick.",
     garments: () => byGender("men"),
   },
   women: {
