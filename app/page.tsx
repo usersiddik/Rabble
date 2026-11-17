@@ -1,202 +1,202 @@
-import Image from "next/image";
 import Link from "next/link";
-import Marquee from "@/components/Marquee";
+import DropCountdown from "@/components/DropCountdown";
+import FlipCard from "@/components/FlipCard";
+import GarmentCutout from "@/components/GarmentCutout";
 import HangingRail from "@/components/HangingRail";
-import ProductCard from "@/components/ProductCard";
+import JoinDrop from "@/components/JoinDrop";
+import Marquee from "@/components/Marquee";
+import { NoiseBars, NoiseDivider } from "@/components/Noise";
 import Reveal from "@/components/Reveal";
-import { editorial, newArrivals } from "@/lib/products";
-
-const TICKER = [
-  "AW26 — Drop 01 is live",
-  "No wallflowers",
-  "Free shipping over ₹1,999",
-  "Designed in India",
-  "One-run prints — no restocks",
-];
+import { byGender, getGarment, liveGarments } from "@/content/garments";
+import { currentDrop, nextDrop } from "@/content/drops";
+import { ticker } from "@/content/site";
 
 export default function Home() {
-  const fresh = newArrivals().slice(0, 4);
+  const live = currentDrop();
+  const next = nextDrop();
+  const fresh = [...liveGarments()].sort((a, b) => b.order - a.order).slice(0, 4);
+  const hero = getGarment("reprint-tee-01")!;
+  const menCover = getGarment("second-shift-trucker")!;
+  const womenCover = getGarment("sunstrike-crop-hood")!;
 
   return (
     <>
-      {/* ——— hero ——— */}
-      <section className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 md:pt-16">
-        <div className="grid items-end gap-10 md:grid-cols-[1.1fr_1fr]">
-          <div>
-            <Reveal>
-              <p className="label text-accent">Rabble — AW26, Drop 01</p>
-            </Reveal>
-            <Reveal delay={80}>
-              <h1 className="display mt-4 text-[clamp(3rem,9vw,7rem)]">
+      {/* ——— hero: the rack ——— */}
+      <section className="pt-10 md:pt-14" aria-labelledby="hero-heading">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="grid items-end gap-8 md:grid-cols-[1.2fr_1fr]">
+            <div>
+              <p className="rise label text-terracotta">
+                {live.code} — {live.name} · live now
+              </p>
+              <h1 id="hero-heading" className="rise display display-xl mt-4" style={{ "--rise-delay": "80ms" } as React.CSSProperties}>
                 Noise
                 <br />
                 you can
                 <br />
-                <span className="serif-note lowercase text-accent">wear.</span>
+                <span className="serif-note lowercase text-terracotta">wear.</span>
               </h1>
-            </Reveal>
-            <Reveal delay={160}>
-              <p className="mt-6 max-w-sm text-ink-2">
-                Contemporary staples for men and women. Designed in India, cut for
-                the loud majority, built to be lived in — not saved for later.
+            </div>
+            <div className="rise md:pb-3" style={{ "--rise-delay": "160ms" } as React.CSSProperties}>
+              <p className="prose-editorial max-w-sm">
+                Front-and-back prints from a studio in Bengaluru. Heavyweight cotton, one run per artwork, UPI or cash
+                at the door. Give the rail a drag.
               </p>
-            </Reveal>
-            <Reveal delay={240}>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/new-arrivals" className="btn btn-ink">
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link href="/new-arrivals" className="btn btn-carbon">
                   Shop Drop 01
                 </Link>
                 <Link href="/about" className="btn btn-ghost">
-                  Why Rabble
+                  Why front &amp; back
                 </Link>
               </div>
-            </Reveal>
-          </div>
-
-          <div className="relative">
-            <Reveal className="img-hover">
-              <div className="img-frame relative aspect-[4/5]">
-                <Image
-                  src={editorial.heroMain}
-                  alt="Sunstrike Co-ord in turmeric, shot on a basketball court"
-                  fill
-                  priority
-                  sizes="(min-width: 768px) 45vw, 100vw"
-                  className="object-cover"
-                />
-                <span className="hang-tag hang-tag--accent absolute left-4 top-4">
-                  Sunstrike Co-ord
-                </span>
-              </div>
-            </Reveal>
-            <Reveal
-              delay={150}
-              className="img-hover absolute -bottom-10 -left-6 hidden w-44 rotate-[-3deg] md:block lg:w-56"
-            >
-              <div className="img-frame relative aspect-[3/4] shadow-xl">
-                <Image
-                  src={editorial.heroSide}
-                  alt="Layered streetwear look with a red hoodie"
-                  fill
-                  sizes="224px"
-                  className="object-cover"
-                />
-              </div>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-      <Marquee items={TICKER} />
-
-      {/* ——— the rack ——— */}
-      <section className="bg-chalk-2/60 py-16 md:py-20" aria-labelledby="rack-heading">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <Reveal className="mb-10 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="label text-ink-3">New collection</p>
-              <h2 id="rack-heading" className="display mt-2 text-4xl md:text-5xl">
-                On the rack
-              </h2>
             </div>
-            <p className="serif-note max-w-[16rem] text-right text-lg text-ink-2">
-              Seven pieces, no filler. Give the rail a drag.
-            </p>
-          </Reveal>
+          </div>
         </div>
-        <Reveal>
+
+        <div className="rise mt-10 md:mt-14" style={{ "--rise-delay": "240ms" } as React.CSSProperties}>
           <HangingRail />
-        </Reveal>
+        </div>
+
+        {/* hero footer: join the drop */}
+        <div className="mx-auto mt-12 max-w-7xl px-4 sm:px-6">
+          <Reveal className="grid items-center gap-6 border-t hairline pt-8 md:grid-cols-[1fr_auto]">
+            <div>
+              <p className="label text-cobalt">{next ? `${next.code} — ${next.name}` : "Next drop"}</p>
+              <p className="serif-note mt-1 text-xl text-carbon-2">
+                {next ? `${next.pieces} pieces land ${new Date(next.date).toLocaleDateString("en-IN", { day: "numeric", month: "long" })}. The list hears an hour early.` : "The list hears first."}
+              </p>
+            </div>
+            <JoinDrop source="hero" className="relative w-full md:w-96" />
+          </Reveal>
+        </div>
       </section>
 
-      {/* ——— men / women discovery ——— */}
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24" aria-label="Collections">
-        <div className="grid gap-5 md:grid-cols-2">
-          <Reveal className="img-hover">
-            <Link href="/men" className="group block">
-              <div className="img-frame relative aspect-[4/5] md:aspect-[3/4]">
-                <Image
-                  src={editorial.menCover}
-                  alt="Fence Hopper Jacket on a rooftop"
-                  fill
-                  sizes="(min-width: 768px) 50vw, 100vw"
-                  className="object-cover"
-                />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/60 to-transparent p-6 pt-20">
-                  <h3 className="display text-4xl text-chalk md:text-5xl">Men</h3>
-                  <p className="label mt-2 text-chalk/80 transition-colors group-hover:text-accent">
-                    Make a scene →
-                  </p>
-                </div>
+      <Marquee items={ticker} className="mt-12" />
+
+      {/* ——— front & back ——— */}
+      <section className="mx-auto max-w-7xl px-4 py-[var(--space-section)] sm:px-6" aria-labelledby="fb-heading">
+        <div className="grid items-center gap-10 md:grid-cols-2 md:gap-16">
+          <Reveal className="order-2 md:order-1">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="studio grain grain-light aspect-[4/5] p-[10%]">
+                <GarmentCutout garment={hero} side="front" className="h-full w-full" />
+                <p className="micro mt-2 text-center text-steel-deep">Front — the question</p>
               </div>
-            </Link>
+              <div className="studio-dark grain aspect-[4/5] p-[10%] md:mt-10">
+                <GarmentCutout garment={hero} side="back" className="h-full w-full" />
+                <p className="micro mt-2 text-center text-alabaster/50">Back — the answer</p>
+              </div>
+            </div>
           </Reveal>
-          <Reveal delay={100} className="img-hover md:mt-14">
-            <Link href="/women" className="group block">
-              <div className="img-frame relative aspect-[4/5] md:aspect-[3/4]">
-                <Image
-                  src={editorial.womenCover}
-                  alt="Editorial look with a wide-brim hat"
-                  fill
-                  sizes="(min-width: 768px) 50vw, 100vw"
-                  className="object-cover"
-                />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/60 to-transparent p-6 pt-20">
-                  <h3 className="display text-4xl text-chalk md:text-5xl">Women</h3>
-                  <p className="label mt-2 text-chalk/80 transition-colors group-hover:text-accent">
-                    Start something →
-                  </p>
-                </div>
-              </div>
+          <Reveal delay={100} className="order-1 md:order-2">
+            <p className="label text-steel-deep">Why two prints</p>
+            <h2 id="fb-heading" className="display display-lg mt-3">
+              Front says hello.
+              <br />
+              <span className="serif-note lowercase text-terracotta">Back says goodbye.</span>
+            </h2>
+            <p className="prose-editorial mt-6 max-w-md">
+              A garment is seen from behind for most of its life. So every Rabble piece carries a small signal on the
+              chest and a broadcast across the back. Never the same artwork at two sizes.
+            </p>
+            <Link href="/about#front-and-back" className="label mt-8 inline-block hover:text-terracotta">
+              Read why →
             </Link>
           </Reveal>
         </div>
       </section>
 
-      {/* ——— new this week ——— */}
-      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 md:pb-24" aria-labelledby="new-heading">
-        <Reveal className="mb-8 flex items-end justify-between">
-          <h2 id="new-heading" className="display text-3xl md:text-4xl">
-            New this week
-          </h2>
-          <Link href="/new-arrivals" className="label shrink-0 hover:text-accent">
-            View all →
-          </Link>
-        </Reveal>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4">
-          {fresh.map((product, i) => (
-            <Reveal key={product.slug} delay={i * 70}>
-              <ProductCard product={product} />
+      <NoiseDivider className="mx-auto max-w-7xl px-4 sm:px-6" seed={2} label="Drop 01" />
+
+      {/* ——— men / women ——— */}
+      <section className="mx-auto max-w-7xl px-4 py-[var(--space-section)] sm:px-6" aria-label="Collections">
+        <div className="grid gap-5 md:grid-cols-2">
+          {[
+            { href: "/men", title: "Men", line: "Make a scene →", garment: menCover, side: "back" as const, dark: true, count: byGender("men").length },
+            { href: "/women", title: "Women", line: "Start something →", garment: womenCover, side: "front" as const, dark: false, count: byGender("women").length },
+          ].map((tile, i) => (
+            <Reveal key={tile.href} delay={i * 100} className={i === 1 ? "md:mt-14" : ""}>
+              <Link href={tile.href} className={`group relative block aspect-[4/5] overflow-hidden md:aspect-[3/4] ${tile.dark ? "studio-dark grain" : "studio grain grain-light"}`}>
+                <div className="absolute inset-0 flex items-center justify-center p-[12%] transition-transform duration-[var(--duration-slow)] ease-[var(--ease-out)] group-hover:scale-[1.04]">
+                  <GarmentCutout garment={tile.garment} side={tile.side} className="h-full w-auto max-w-full" alt="" />
+                </div>
+                <div className="absolute inset-x-0 bottom-0 z-[2] p-6">
+                  <h3 className={`display text-4xl md:text-5xl ${tile.dark ? "text-alabaster" : "text-carbon"}`}>{tile.title}</h3>
+                  <p className={`label mt-2 transition-colors group-hover:text-terracotta ${tile.dark ? "text-alabaster/70" : "text-carbon-2"}`}>
+                    {tile.line}
+                  </p>
+                </div>
+                <p className={`micro absolute right-5 top-5 z-[2] ${tile.dark ? "text-alabaster/50" : "text-steel-deep"}`}>{tile.count} pieces</p>
+              </Link>
             </Reveal>
           ))}
         </div>
       </section>
 
-      {/* ——— campaign ——— */}
-      <section className="relative overflow-hidden" aria-labelledby="campaign-heading">
-        <div className="relative h-[70vh] min-h-[420px]">
-          <Image
-            src={editorial.crowd}
-            alt="A crowd of friends on a city bench"
-            fill
-            sizes="100vw"
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-ink/45" />
-          <div className="absolute inset-0 flex items-center">
-            <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+      {/* ——— new this week ——— */}
+      <section className="mx-auto max-w-7xl px-4 pb-[var(--space-section)] sm:px-6" aria-labelledby="new-heading">
+        <Reveal className="mb-8 flex items-end justify-between">
+          <h2 id="new-heading" className="display display-md">
+            New this week
+          </h2>
+          <Link href="/new-arrivals" className="label shrink-0 hover:text-terracotta">
+            View all →
+          </Link>
+        </Reveal>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4">
+          {fresh.map((g, i) => (
+            <Reveal key={g.slug} delay={i * 70}>
+              <FlipCard garment={g} />
+            </Reveal>
+          ))}
+        </div>
+      </section>
+
+      {/* ——— drop 02 ——— */}
+      {next && (
+        <section className="bg-carbon py-[var(--space-section)] text-alabaster" aria-labelledby="drop-heading">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="grid gap-10 md:grid-cols-[1fr_1.1fr] md:items-center md:gap-16">
               <Reveal>
-                <p className="label text-chalk/70">The point of all this</p>
-                <h2 id="campaign-heading" className="display mt-4 max-w-3xl text-4xl text-chalk md:text-6xl">
-                  A rabble is just a crowd{" "}
-                  <span className="serif-note lowercase text-butter">with a point of view.</span>
+                <p className="label text-cobalt-light">
+                  {next.code} — {next.name}
+                </p>
+                <h2 id="drop-heading" className="display display-lg mt-3">
+                  {next.tagline}
                 </h2>
-                <Link href="/about" className="btn btn-chalk mt-8">
-                  Read the manifesto
-                </Link>
+                <p className="mt-5 max-w-md text-lg text-alabaster/70">{next.blurb}</p>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Link href="/drop" className="btn btn-alabaster">
+                    See the drop
+                  </Link>
+                  <Link href="/new-arrivals?drop=2" className="btn btn-ghost border-alabaster/30 text-alabaster hover:bg-alabaster hover:text-carbon">
+                    The pieces
+                  </Link>
+                </div>
+              </Reveal>
+              <Reveal delay={120}>
+                <DropCountdown target={next.date} tone="dark" />
+                <JoinDrop source="home-drop" tone="dark" className="relative mt-5" />
               </Reveal>
             </div>
           </div>
+        </section>
+      )}
+
+      {/* ——— manifesto band ——— */}
+      <section className="relative overflow-hidden bg-alabaster-2 py-[var(--space-section)]" aria-labelledby="campaign-heading">
+        <NoiseBars seed={13} count={120} aspect={0.12} className="pointer-events-none absolute inset-x-0 bottom-0 h-40 w-full text-carbon/5" />
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
+          <Reveal>
+            <p className="label text-steel-deep">The point of all this</p>
+            <h2 id="campaign-heading" className="display display-lg mt-4 max-w-3xl">
+              A rabble is just a crowd <span className="serif-note lowercase text-terracotta">with a point of view.</span>
+            </h2>
+            <Link href="/about" className="btn btn-carbon mt-8">
+              Read the manifesto
+            </Link>
+          </Reveal>
         </div>
       </section>
     </>

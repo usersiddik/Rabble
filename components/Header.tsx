@@ -4,12 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCart } from "@/lib/cart";
-
-const NAV = [
-  { href: "/men", label: "Men" },
-  { href: "/women", label: "Women" },
-  { href: "/new-arrivals", label: "New" },
-];
+import { nav } from "@/content/site";
+import Wordmark from "./Wordmark";
 
 export default function Header() {
   const pathname = usePathname();
@@ -31,22 +27,24 @@ export default function Header() {
     };
   }, [menuOpen]);
 
+  // close the menu on navigation
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMenuOpen(false);
+  }, [pathname]);
+
   const linkCls = (href: string) =>
-    `label transition-colors hover:text-accent ${
-      pathname.startsWith(href) ? "text-accent" : "text-ink"
-    }`;
+    `label transition-colors hover:text-terracotta ${pathname.startsWith(href) ? "text-terracotta" : "text-carbon"}`;
 
   return (
-    <header
-      className={`sticky top-0 z-40 bg-chalk/90 backdrop-blur-sm transition-shadow ${
-        scrolled ? "border-b hairline" : ""
-      }`}
-    >
+    <header className={`sticky top-0 z-40 bg-alabaster/90 backdrop-blur-sm transition-shadow ${scrolled ? "border-b hairline" : ""}`}>
+      <a href="#main" className="skip-link label">
+        Skip to content
+      </a>
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        {/* left: nav (desktop) / burger (mobile) */}
         <nav aria-label="Primary" className="hidden flex-1 items-center gap-7 md:flex">
-          {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className={linkCls(item.href)}>
+          {nav.primary.map((item) => (
+            <Link key={item.href} href={item.href} className={linkCls(item.href)} aria-current={pathname === item.href ? "page" : undefined}>
               {item.label}
             </Link>
           ))}
@@ -61,43 +59,40 @@ export default function Header() {
           <span className="label">{menuOpen ? "Close" : "Menu"}</span>
         </button>
 
-        {/* center: wordmark */}
-        <Link href="/" aria-label="RABBLE home" className="display text-[1.35rem] leading-none">
-          Rabble<span className="text-accent">.</span>
-        </Link>
+        <Wordmark href="/" variant="horizontal" size="sm" />
 
-        {/* right */}
         <div className="flex flex-1 items-center justify-end gap-7">
-          <Link href="/about" className={`hidden md:inline ${linkCls("/about")}`}>
-            About
-          </Link>
-          <button type="button" onClick={openDrawer} className="label hover:text-accent">
+          {nav.secondary.map((item) => (
+            <Link key={item.href} href={item.href} className={`hidden md:inline ${linkCls(item.href)}`}>
+              {item.label}
+            </Link>
+          ))}
+          <button type="button" onClick={openDrawer} className="label hover:text-terracotta">
             Bag
-            <span className="tabular ml-1 inline-flex min-w-[1.3em] items-center justify-center rounded-full bg-ink px-1.5 py-0.5 text-[0.6rem] leading-none text-chalk">
+            <span aria-hidden className="tabular ml-1 inline-flex min-w-[1.3em] items-center justify-center rounded-full bg-carbon px-1.5 py-0.5 text-[0.6rem] leading-none text-alabaster">
               {count}
+            </span>
+            <span className="sr-only">
+              , {count} {count === 1 ? "item" : "items"}
             </span>
           </button>
         </div>
       </div>
 
-      {/* mobile menu */}
       {menuOpen && (
-        <div id="mobile-menu" className="border-t hairline bg-chalk md:hidden">
+        <div id="mobile-menu" className="border-t hairline bg-alabaster md:hidden">
           <nav aria-label="Mobile" className="flex flex-col px-4 py-6">
-            {[...NAV, { href: "/about", label: "About" }, { href: "/bag", label: "Bag" }].map(
-              (item, i) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMenuOpen(false)}
-                  className="display border-b hairline py-4 text-3xl"
-                  style={{ animation: `page-in 0.4s ${i * 60}ms both` }}
-                >
-                  {item.label}
-                </Link>
-              ),
-            )}
-            <p className="serif-note pt-6 text-ink-3">Join the noise.</p>
+            {[...nav.primary, ...nav.secondary, { href: "/bag", label: "Bag" }].map((item, i) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="display border-b hairline py-4 text-3xl"
+                style={{ animation: `page-in 0.4s ${i * 60}ms both` }}
+              >
+                {item.label}
+              </Link>
+            ))}
+            <p className="serif-note pt-6 text-steel-deep">Noise you can wear.</p>
           </nav>
         </div>
       )}

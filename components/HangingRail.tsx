@@ -2,56 +2,39 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import GarmentArt, { type GarmentColors, type GarmentKind } from "./GarmentArt";
-import { formatINR, getProduct } from "@/lib/products";
+import GarmentCutout from "./GarmentCutout";
+import { formatINR, getGarment, type Garment } from "@/content/garments";
 
 interface RailItem {
   slug: string;
-  kind: GarmentKind;
-  colors: GarmentColors;
   tag?: string;
-  tagTone?: "ink" | "accent";
+  tagTone?: "carbon" | "terracotta" | "cobalt";
 }
 
-/** Drop 01 lineup — colours roughly match each product's photography. */
+/** Drop 01 lineup, in rail order. */
 const RAIL: RailItem[] = [
-  { slug: "static-hoodie", kind: "hoodie", colors: { body: "#aeaca5", shade: "#8f8d86" }, tag: "−20%" },
-  { slug: "low-volume-tee", kind: "tee", colors: { body: "#24231f", shade: "#121110" } },
-  { slug: "oat-crew", kind: "crew", colors: { body: "#ddd3bd", shade: "#c2b79d" } },
-  {
-    slug: "second-shift-trucker",
-    kind: "trucker",
-    colors: { body: "#2e3f63", shade: "#1f2c48", detail: "#b78e5a" },
-    tag: "NEW",
-    tagTone: "accent",
-  },
-  {
-    slug: "half-day-bomber",
-    kind: "bomber",
-    colors: { body: "#b06c43", shade: "#8e5431" },
-    tag: "3 LEFT",
-  },
-  {
-    slug: "sunstrike-coord",
-    kind: "cropped-hoodie",
-    colors: { body: "#e9c05c", shade: "#caa041" },
-    tag: "NEW",
-    tagTone: "accent",
-  },
-  {
-    slug: "reprint-tee-01",
-    kind: "graphic-tee",
-    colors: { body: "#e8e0cd", shade: "#cfc5ac", detail: "#2438e8" },
-  },
+  { slug: "static-hoodie", tag: "−20%" },
+  { slug: "low-volume-tee" },
+  { slug: "oat-crew" },
+  { slug: "second-shift-trucker", tag: "NEW", tagTone: "terracotta" },
+  { slug: "half-day-bomber", tag: "3 LEFT" },
+  { slug: "sunstrike-crop-hood", tag: "NEW", tagTone: "terracotta" },
+  { slug: "reprint-tee-01" },
+  { slug: "loud-minority-crew" },
+  { slug: "open-invite-tee" },
 ];
+
+const ITEMS = RAIL.map((item) => ({ ...item, garment: getGarment(item.slug) })).filter(
+  (i): i is RailItem & { garment: Garment } => Boolean(i.garment),
+);
 
 /** deterministic pseudo-random per item, for organic swing variation */
 const vary = (i: number) => 0.85 + ((i * 97) % 30) / 100;
 
 export default function HangingRail() {
   const viewportRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const trackRef = useRef<HTMLUListElement>(null);
+  const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
   const [active, setActive] = useState(0);
   const activeRef = useRef(0);
 
@@ -67,8 +50,9 @@ export default function HangingRail() {
     let lastV = 0;
     let dragging = false;
     let lastX = 0;
-    const angles = RAIL.map(() => 0);
-    const omegas = RAIL.map(() => 0);
+    let target: number | null = null; // keyboard focus / nudge destination
+    const angles = ITEMS.map(() => 0);
+    const omegas = ITEMS.map(() => 0);
     let raf = 0;
 
     const bounds = () => Math.min(0, viewport.clientWidth - track.scrollWidth);
@@ -77,9 +61,18 @@ export default function HangingRail() {
       const min = bounds();
 
       if (!dragging) {
+        if (target !== null) {
+          const clamped = Math.max(min, Math.min(0, target));
+          const d = clamped - pos;
+          v = d * 0.14;
+          if (Math.abs(d) < 0.5) {
+            pos = clamped;
+            v = 0;
+            target = null;
+          }
+        }
         pos += v;
-        v *= 0.94;
-        // rubber-band back into range
+        if (target === null) v *= 0.94;
         if (pos > 0) {
           pos += (0 - pos) * 0.12;
           v *= 0.6;
@@ -87,7 +80,7 @@ export default function HangingRail() {
           pos += (min - pos) * 0.12;
           v *= 0.6;
         }
-        if (Math.abs(v) < 0.02) v = 0;
+        if (Math.abs(v) < 0.02 && target === null) v = 0;
       }
 
       const accel = v - lastV;
@@ -96,8 +89,7 @@ export default function HangingRail() {
       track.style.transform = `translate3d(${pos}px,0,0)`;
 
       if (!reduced) {
-        for (let i = 0; i < RAIL.length; i++) {
-          // damped pendulum driven by track acceleration (inertia)
+        for (let i = 0; i < ITEMS.length; i++) {
           omegas[i] += -0.035 * angles[i] - 0.075 * omegas[i] + accel * 0.9 * vary(i);
           angles[i] += omegas[i];
           if (angles[i] > 16) angles[i] = 16;
@@ -107,11 +99,10 @@ export default function HangingRail() {
         }
       }
 
-      // nearest item to viewport centre
       const center = viewport.clientWidth / 2 - pos;
       let best = 0;
       let bestDist = Infinity;
-      for (let i = 0; i < RAIL.length; i++) {
+      for (let i = 0; i < ITEMS.length; i++) {
         const el = itemRefs.current[i];
         if (!el) continue;
         const mid = el.offsetLeft + el.offsetWidth / 2;
@@ -131,6 +122,7 @@ export default function HangingRail() {
 
     const onPointerDown = (e: PointerEvent) => {
       dragging = true;
+      target = null;
       lastX = e.clientX;
       v = 0;
       viewport.setPointerCapture(e.pointerId);
@@ -140,7 +132,7 @@ export default function HangingRail() {
       let dx = e.clientX - lastX;
       lastX = e.clientX;
       const min = bounds();
-      if (pos > 0 || pos < min) dx *= 0.35; // resist beyond the ends
+      if (pos > 0 || pos < min) dx *= 0.35;
       pos += dx;
       v = dx;
     };
@@ -150,7 +142,21 @@ export default function HangingRail() {
     const onWheel = (e: WheelEvent) => {
       if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
       e.preventDefault();
+      target = null;
       v -= e.deltaX * 0.12;
+    };
+    const nudgeHandler = (e: Event) => {
+      const dir = (e as CustomEvent<number>).detail;
+      target = null;
+      v += dir * 14;
+    };
+    /** keyboard: bring the focused garment to the centre instead of letting the browser scroll the clipped track */
+    const focusHandler = (e: Event) => {
+      const index = Number((e as CustomEvent<number>).detail);
+      const el = itemRefs.current[index];
+      if (!el) return;
+      viewport.scrollLeft = 0;
+      target = viewport.clientWidth / 2 - (el.offsetLeft + el.offsetWidth / 2);
     };
 
     viewport.addEventListener("pointerdown", onPointerDown);
@@ -158,12 +164,8 @@ export default function HangingRail() {
     viewport.addEventListener("pointerup", endDrag);
     viewport.addEventListener("pointercancel", endDrag);
     viewport.addEventListener("wheel", onWheel, { passive: false });
-
-    const nudgeHandler = (e: Event) => {
-      const dir = (e as CustomEvent<number>).detail;
-      v += dir * 14;
-    };
     viewport.addEventListener("rail-nudge", nudgeHandler);
+    viewport.addEventListener("rail-focus", focusHandler);
 
     raf = requestAnimationFrame(frame);
     return () => {
@@ -174,6 +176,7 @@ export default function HangingRail() {
       viewport.removeEventListener("pointercancel", endDrag);
       viewport.removeEventListener("wheel", onWheel);
       viewport.removeEventListener("rail-nudge", nudgeHandler);
+      viewport.removeEventListener("rail-focus", focusHandler);
     };
   }, []);
 
@@ -181,86 +184,72 @@ export default function HangingRail() {
     viewportRef.current?.dispatchEvent(new CustomEvent("rail-nudge", { detail: dir }));
   };
 
-  const activeProduct = getProduct(RAIL[active].slug);
+  const activeItem = ITEMS[active];
 
   return (
     <div>
-      {/* the rod */}
       <div className="relative">
         <div
           aria-hidden
           className="absolute inset-x-0 top-[10px] h-[5px] rounded-full"
           style={{
-            background: "linear-gradient(#b9b7b0, #8f8e88 55%, #6f6e68)",
+            background: "linear-gradient(#c4c4c8, #8e8e93 55%, #6f6f74)",
             boxShadow: "0 1px 2px rgb(0 0 0 / 0.18)",
           }}
         />
-        <div
-          ref={viewportRef}
-          className="cursor-grab touch-pan-y select-none overflow-hidden active:cursor-grabbing"
-        >
-          <div ref={trackRef} className="flex w-max items-start px-[8vw] will-change-transform">
-            {RAIL.map((item, i) => {
-              const product = getProduct(item.slug);
-              return (
-                <div
-                  key={item.slug}
-                  ref={(el) => {
-                    itemRefs.current[i] = el;
-                  }}
-                  className="w-[150px] shrink-0 origin-[50%_4%] sm:w-[185px] md:w-[210px]"
+        <div ref={viewportRef} className="cursor-grab touch-pan-y select-none overflow-hidden active:cursor-grabbing">
+          <ul ref={trackRef} className="flex w-max list-none items-start px-[8vw] will-change-transform" aria-label="Drop 01 on the rail">
+            {ITEMS.map((item, i) => (
+              <li
+                key={item.slug}
+                ref={(el) => {
+                  itemRefs.current[i] = el;
+                }}
+                className="w-[150px] shrink-0 origin-[50%_4%] sm:w-[185px] md:w-[210px]"
+              >
+                <Link
+                  href={`/product/${item.slug}`}
+                  draggable={false}
+                  onFocus={() => viewportRef.current?.dispatchEvent(new CustomEvent("rail-focus", { detail: i }))}
+                  className="block rounded-md outline-offset-[-6px] transition-opacity hover:opacity-80"
                 >
-                  <Link
-                    href={`/product/${item.slug}`}
-                    draggable={false}
-                    aria-label={product ? `${product.name} — ${formatINR(product.price)}` : item.slug}
-                    className="block transition-opacity hover:opacity-80"
-                  >
-                    <GarmentArt
-                      kind={item.kind}
-                      colors={item.colors}
-                      tag={item.tag}
-                      tagTone={item.tagTone}
-                      className="pointer-events-none h-auto w-full"
-                    />
-                  </Link>
-                </div>
-              );
-            })}
-          </div>
+                  <span className="sr-only">
+                    {item.garment.name} — {formatINR(item.garment.price)}
+                  </span>
+                  <GarmentCutout
+                    garment={item.garment}
+                    side="front"
+                    tag={item.tag}
+                    tagTone={item.tagTone}
+                    alt=""
+                    className="pointer-events-none h-auto w-full"
+                  />
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
-      {/* caption */}
       <div className="mt-6 flex flex-col items-center gap-4 text-center">
-        <div className="relative h-12 w-full">
-          {activeProduct && (
-            <div key={activeProduct.slug} className="absolute inset-0" style={{ animation: "page-in 0.35s both" }}>
-              <p className="font-semibold">{activeProduct.name}</p>
-              <p className="tabular mt-0.5 text-sm text-ink-3">
-                {activeProduct.color} · {formatINR(activeProduct.price)}
+        <div className="relative h-12 w-full" aria-live="polite">
+          {activeItem && (
+            <div key={activeItem.slug} className="absolute inset-0" style={{ animation: "page-in 0.35s both" }}>
+              <p className="font-semibold">{activeItem.garment.name}</p>
+              <p className="tabular mt-0.5 text-sm text-steel-deep">
+                {activeItem.garment.color} · {formatINR(activeItem.garment.price)}
               </p>
             </div>
           )}
         </div>
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            aria-label="Previous piece"
-            onClick={() => nudge(1)}
-            className="btn btn-ghost size-11 !p-0"
-          >
+          <button type="button" aria-label="Previous piece" onClick={() => nudge(1)} className="btn btn-ghost size-11 !p-0">
             ←
           </button>
-          <Link href="/new-arrivals" className="btn btn-ink">
-            Shop the drop
+          <Link href="/new-arrivals" className="btn btn-carbon">
+            Shop Drop 01
           </Link>
-          <button
-            type="button"
-            aria-label="Next piece"
-            onClick={() => nudge(-1)}
-            className="btn btn-ghost size-11 !p-0"
-          >
+          <button type="button" aria-label="Next piece" onClick={() => nudge(-1)} className="btn btn-ghost size-11 !p-0">
             →
           </button>
         </div>

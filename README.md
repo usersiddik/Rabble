@@ -1,30 +1,22 @@
-# RABBLE
+# RABBLE — noise you can wear
 
-Concept e-commerce experience for **RABBLE** — a contemporary fashion brand for men and
-women, aimed at 18–30 year olds in India. *Noise you can wear.*
-
-## Stack
-
-- Next.js (App Router, static prerender) + TypeScript
-- Tailwind CSS v4 (design tokens in `app/globals.css`)
-- No animation libraries — custom pendulum physics, IntersectionObserver reveals, CSS transitions
-
-## Signature pieces
-
-- **The hanging rail** (`components/HangingRail.tsx` + `GarmentArt.tsx`): a draggable
-  steel rail of illustrated garments on wooden hangers with damped-pendulum swing physics,
-  hang-tags and an active-item caption.
-- Chalk / ink / cobalt palette, Archivo (expanded) + Instrument Serif type system.
-- Full shopping flow: collections with filters & sorting, product pages with size guide,
-  bag drawer and bag page (persisted to `localStorage`).
-
-## Develop
+Concept storefront for a front-and-back print label from Bengaluru. Next.js 16 App Router, Tailwind v4, no animation libraries.
 
 ```bash
-npm run dev    # dev server
-npm run build  # production build
-npm start      # serve the build
+npm install
+cp .env.example .env.local   # optional: Resend keys for the waitlist
+npm run dev
 ```
 
-Product data and editorial imagery live in `lib/products.ts` (photography via Unsplash,
-for design evaluation only).
+- `/` garment-rack hero, drop teaser
+- `/brand` living style guide (tokens in `app/globals.css`)
+- `/about` manifesto
+- `/men`, `/women`, `/new-arrivals` collections with Front | Back flip cards
+- `/product/[slug]` garment viewer, print spec, size guide
+- `/drop` countdown and per-piece notify
+- `/lookbook` editorial chapters
+- `/shipping-returns`, `/exchanges`, `/size-help`, `/faq`, `/privacy`, `/terms`
+
+Content lives in `content/`; see `docs/README.md` for the content model and screenshots per area.
+
+`npm run lint` and `npm run build` must pass before merging.
