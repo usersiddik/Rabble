@@ -1,0 +1,3921 @@
+From e3f88dc7ef03e948d2169820623e0b525d2a744d Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 17 Nov 2026 05:36:30 +0000
+Subject: [PATCH] Redesign homepage: interactive garment-rack hero, Front/Back
+ prints, dual-mood showcase
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- GarmentRack hero: full-width steel rail, 7 hangers, spring accordion with
+  side-profile tilt, pendulum sway, Front|Back flip, drag/swipe, keyboard a11y
+- GarmentCutout: procedural studio garment renders (front/back/side) with
+  optional cutout photography; original print artwork; lib/rack.ts lineup
+- Glass header with new nav, micro-header, ⌘K search overlay
+- Refined marquee, Print Lab / Atelier Edit showcase, flip product cards with
+  quick-add size bar, craftsmanship & India D2C trust strip
+- Studio palette tokens; framer-motion added
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01L59bBFmKZbFoNXQh86Qfsz
+---
+ README.md                       |  26 +-
+ app/globals.css                 |  85 ++++
+ app/page.tsx                    | 194 ++------
+ components/CategoryShowcase.tsx | 215 +++++++++
+ components/GarmentArt.tsx       | 281 -----------
+ components/GarmentCutout.tsx    | 833 ++++++++++++++++++++++++++++++++
+ components/GarmentRack.tsx      | 525 ++++++++++++++++++++
+ components/HangingRail.tsx      | 270 -----------
+ components/Header.tsx           | 180 ++++---
+ components/Marquee.tsx          |  16 +-
+ components/ProductCard.tsx      | 188 +++++--
+ components/SearchOverlay.tsx    | 151 ++++++
+ components/TrustStrip.tsx       | 103 ++++
+ lib/rack.ts                     | 110 +++++
+ package-lock.json               | 157 ++----
+ package.json                    |   1 +
+ 16 files changed, 2420 insertions(+), 915 deletions(-)
+ create mode 100644 components/CategoryShowcase.tsx
+ delete mode 100644 components/GarmentArt.tsx
+ create mode 100644 components/GarmentCutout.tsx
+ create mode 100644 components/GarmentRack.tsx
+ delete mode 100644 components/HangingRail.tsx
+ create mode 100644 components/SearchOverlay.tsx
+ create mode 100644 components/TrustStrip.tsx
+ create mode 100644 lib/rack.ts
+
+diff --git a/README.md b/README.md
+index a5f69a1..f04c6ef 100644
+--- a/README.md
++++ b/README.md
+@@ -1,20 +1,32 @@
+ # RABBLE
+ 
+-Concept e-commerce experience for **RABBLE** — a contemporary fashion brand for men and
+-women, aimed at 18–30 year olds in India. *Noise you can wear.*
++Concept e-commerce experience for **RABBLE** — India's D2C home for **front & back printed
++graphic tees** and a **curated women's boutique edit**, aimed at 18–30 year olds. *Noise you can wear.*
+ 
+ ## Stack
+ 
+ - Next.js (App Router, static prerender) + TypeScript
+ - Tailwind CSS v4 (design tokens in `app/globals.css`)
+-- No animation libraries — custom pendulum physics, IntersectionObserver reveals, CSS transitions
++- Framer Motion for the rack physics (spring accordion, side-profile tilt, hanger sway, Front/Back flips);
++  IntersectionObserver reveals and CSS transitions everywhere else
+ 
+ ## Signature pieces
+ 
+-- **The hanging rail** (`components/HangingRail.tsx` + `GarmentArt.tsx`): a draggable
+-  steel rail of illustrated garments on wooden hangers with damped-pendulum swing physics,
+-  hang-tags and an active-item caption.
+-- Chalk / ink / cobalt palette, Archivo (expanded) + Instrument Serif type system.
++- **The garment rack hero** (`components/GarmentRack.tsx`): a full-width matte-steel rail with
++  seven garments on wooden hangers. Inactive pieces hang in a compressed side profile
++  (`rotateY(55deg) scaleX(0.55)`); hover/tap springs one to the front, neighbours glide apart with
++  a pendulum micro-sway, and a **Front | Back** pill (or a second tap) flips the piece 180° to its
++  back print. Drag / swipe to browse; keyboard accessible.
++- **`<GarmentCutout />`** (`components/GarmentCutout.tsx`): procedural studio garment renders —
++  fabric grain, fold shading, rib trims, seam stitching, hook tags — with `front`, `back` and
++  `side` views and original print artwork. Pass `frontImage` / `backImage` / `sidePreview`
++  (transparent cutout photography) to swap in real product shots per piece (`lib/rack.ts`).
++- Dual-mood showcase: **The Print Lab** (tee flips to its back print on hover) and
++  **The Atelier Edit** (women's boutique, pointer parallax).
++- Product cards with a Front | Back pill, hover auto-flip and a slide-up quick-add size bar;
++  craftsmanship & India D2C trust strip; ⌘K search overlay.
++- Studio alabaster / carbon ink / brushed steel palette with terracotta & cobalt accents,
++  Archivo (expanded) + Instrument Serif type system.
+ - Full shopping flow: collections with filters & sorting, product pages with size guide,
+   bag drawer and bag page (persisted to `localStorage`).
+ 
+diff --git a/app/globals.css b/app/globals.css
+index ddf0861..6d361a7 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -18,6 +18,15 @@
+   --color-clay: #b06c43;
+   --color-butter: #e9c05c;
+   --color-blush: #c9a0b4;
++  /* studio / rack palette */
++  --color-studio: #f6f5f0;
++  --color-studio-2: #edeae2;
++  --color-carbon: #111111;
++  --color-steel: #8e8e93;
++  --color-cobalt: #2438e8;
++  --color-terracotta: #c4623e;
++  --color-sand: #e8dfd0;
++  --color-ivory: #f8f4ec;
+ 
+   --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+   --font-serif: var(--font-instrument), ui-serif, Georgia, serif;
+@@ -234,6 +243,79 @@ body {
+   background: var(--color-accent);
+ }
+ 
++/* ——— glass header ——— */
++
++.glass {
++  background: color-mix(in srgb, var(--color-studio) 84%, transparent);
++  -webkit-backdrop-filter: saturate(160%) blur(14px);
++  backdrop-filter: saturate(160%) blur(14px);
++}
++
++/* ——— garment rail ——— */
++
++.rail-bar {
++  background: linear-gradient(180deg, #7c7c81 0%, #4b4b50 30%, #2a2a2d 65%, #141416 100%);
++  box-shadow:
++    0 1px 0 rgb(255 255 255 / 0.5) inset,
++    0 2px 4px rgb(0 0 0 / 0.28),
++    0 10px 18px rgb(0 0 0 / 0.08);
++}
++.rail-bracket {
++  position: absolute;
++  top: -9px;
++  width: 14px;
++  height: 24px;
++  border-radius: 3px;
++  background: linear-gradient(90deg, #3a3a3d, #8e8e93 50%, #3a3a3d);
++  box-shadow: 0 2px 4px rgb(0 0 0 / 0.3);
++}
++.rail-bracket::after {
++  content: "";
++  position: absolute;
++  left: 50%;
++  top: 4px;
++  width: 4px;
++  height: 4px;
++  margin-left: -2px;
++  border-radius: 9999px;
++  background: #1a1a1c;
++  box-shadow: 0 12px 0 #1a1a1c;
++}
++
++.garment-shadow {
++  filter: drop-shadow(0 25px 35px rgb(0 0 0 / 0.14)) drop-shadow(0 4px 6px rgb(0 0 0 / 0.08));
++}
++
++/* ——— flip cards (product grid) ——— */
++
++.flip-scene {
++  perspective: 1200px;
++}
++.flip-card {
++  position: relative;
++  width: 100%;
++  height: 100%;
++  transform-style: preserve-3d;
++  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
++}
++.flip-card.is-back {
++  transform: rotateY(180deg);
++}
++.flip-face {
++  position: absolute;
++  inset: 0;
++  backface-visibility: hidden;
++  -webkit-backface-visibility: hidden;
++}
++.flip-face--back {
++  transform: rotateY(180deg);
++}
++@media (hover: hover) {
++  .flip-scene:hover .flip-card:not(.is-front) {
++    transform: rotateY(180deg);
++  }
++}
++
+ /* ——— misc ——— */
+ 
+ .no-scrollbar {
+@@ -260,4 +342,7 @@ body {
+   .img-frame img {
+     transition: none;
+   }
++  .flip-card {
++    transition: none;
++  }
+ }
+diff --git a/app/page.tsx b/app/page.tsx
+index e0ab1d1..cbd1efa 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -1,17 +1,19 @@
+ import Image from "next/image";
+ import Link from "next/link";
++import CategoryShowcase from "@/components/CategoryShowcase";
++import GarmentRack, { HeroEditorialBanner } from "@/components/GarmentRack";
+ import Marquee from "@/components/Marquee";
+-import HangingRail from "@/components/HangingRail";
+ import ProductCard from "@/components/ProductCard";
+ import Reveal from "@/components/Reveal";
++import TrustStrip from "@/components/TrustStrip";
+ import { editorial, newArrivals } from "@/lib/products";
+ 
+ const TICKER = [
+-  "AW26 — Drop 01 is live",
+-  "No wallflowers",
+-  "Free shipping over ₹1,999",
+-  "Designed in India",
+-  "One-run prints — no restocks",
++  "AW26 Drop 01 Live",
++  "Front & Back Puff Prints",
++  "Curated Women's Boutique Edit",
++  "Free Pan-India Shipping Over ₹1,999",
++  "Small-Batch Runs",
+ ];
+ 
+ export default function Home() {
+@@ -19,147 +21,40 @@ export default function Home() {
+ 
+   return (
+     <>
+-      {/* ——— hero ——— */}
+-      <section className="mx-auto max-w-7xl px-4 pb-16 pt-10 sm:px-6 md:pt-16">
+-        <div className="grid items-end gap-10 md:grid-cols-[1.1fr_1fr]">
+-          <div>
+-            <Reveal>
+-              <p className="label text-accent">Rabble — AW26, Drop 01</p>
+-            </Reveal>
+-            <Reveal delay={80}>
+-              <h1 className="display mt-4 text-[clamp(3rem,9vw,7rem)]">
+-                Noise
+-                <br />
+-                you can
+-                <br />
+-                <span className="serif-note lowercase text-accent">wear.</span>
+-              </h1>
+-            </Reveal>
+-            <Reveal delay={160}>
+-              <p className="mt-6 max-w-sm text-ink-2">
+-                Contemporary staples for men and women. Designed in India, cut for
+-                the loud majority, built to be lived in — not saved for later.
+-              </p>
+-            </Reveal>
+-            <Reveal delay={240}>
+-              <div className="mt-8 flex flex-wrap gap-3">
+-                <Link href="/new-arrivals" className="btn btn-ink">
+-                  Shop Drop 01
+-                </Link>
+-                <Link href="/about" className="btn btn-ghost">
+-                  Why Rabble
+-                </Link>
+-              </div>
+-            </Reveal>
+-          </div>
+-
+-          <div className="relative">
+-            <Reveal className="img-hover">
+-              <div className="img-frame relative aspect-[4/5]">
+-                <Image
+-                  src={editorial.heroMain}
+-                  alt="Sunstrike Co-ord in turmeric, shot on a basketball court"
+-                  fill
+-                  priority
+-                  sizes="(min-width: 768px) 45vw, 100vw"
+-                  className="object-cover"
+-                />
+-                <span className="hang-tag hang-tag--accent absolute left-4 top-4">
+-                  Sunstrike Co-ord
+-                </span>
+-              </div>
+-            </Reveal>
+-            <Reveal
+-              delay={150}
+-              className="img-hover absolute -bottom-10 -left-6 hidden w-44 rotate-[-3deg] md:block lg:w-56"
+-            >
+-              <div className="img-frame relative aspect-[3/4] shadow-xl">
+-                <Image
+-                  src={editorial.heroSide}
+-                  alt="Layered streetwear look with a red hoodie"
+-                  fill
+-                  sizes="224px"
+-                  className="object-cover"
+-                />
+-              </div>
+-            </Reveal>
+-          </div>
++      {/* ——— flagship hero: the garment rack ——— */}
++      <section className="relative bg-studio" aria-labelledby="rack-heading">
++        <div className="absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-studio-2/80 to-transparent" />
++        <h1 id="rack-heading" className="sr-only">
++          Rabble — AW26 Drop 01. Premium printed tees and boutique wear, on the
++          rack.
++        </h1>
++        <div className="relative pb-12 pt-8 md:pb-16 md:pt-10">
++          <GarmentRack />
+         </div>
++        <HeroEditorialBanner />
+       </section>
+ 
+       <Marquee items={TICKER} />
+ 
+-      {/* ——— the rack ——— */}
+-      <section className="bg-chalk-2/60 py-16 md:py-20" aria-labelledby="rack-heading">
+-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+-          <Reveal className="mb-10 flex flex-wrap items-end justify-between gap-4">
+-            <div>
+-              <p className="label text-ink-3">New collection</p>
+-              <h2 id="rack-heading" className="display mt-2 text-4xl md:text-5xl">
+-                On the rack
+-              </h2>
+-            </div>
+-            <p className="serif-note max-w-[16rem] text-right text-lg text-ink-2">
+-              Seven pieces, no filler. Give the rail a drag.
+-            </p>
+-          </Reveal>
+-        </div>
+-        <Reveal>
+-          <HangingRail />
+-        </Reveal>
+-      </section>
+-
+-      {/* ——— men / women discovery ——— */}
+-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24" aria-label="Collections">
+-        <div className="grid gap-5 md:grid-cols-2">
+-          <Reveal className="img-hover">
+-            <Link href="/men" className="group block">
+-              <div className="img-frame relative aspect-[4/5] md:aspect-[3/4]">
+-                <Image
+-                  src={editorial.menCover}
+-                  alt="Fence Hopper Jacket on a rooftop"
+-                  fill
+-                  sizes="(min-width: 768px) 50vw, 100vw"
+-                  className="object-cover"
+-                />
+-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/60 to-transparent p-6 pt-20">
+-                  <h3 className="display text-4xl text-chalk md:text-5xl">Men</h3>
+-                  <p className="label mt-2 text-chalk/80 transition-colors group-hover:text-accent">
+-                    Make a scene →
+-                  </p>
+-                </div>
+-              </div>
+-            </Link>
+-          </Reveal>
+-          <Reveal delay={100} className="img-hover md:mt-14">
+-            <Link href="/women" className="group block">
+-              <div className="img-frame relative aspect-[4/5] md:aspect-[3/4]">
+-                <Image
+-                  src={editorial.womenCover}
+-                  alt="Editorial look with a wide-brim hat"
+-                  fill
+-                  sizes="(min-width: 768px) 50vw, 100vw"
+-                  className="object-cover"
+-                />
+-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/60 to-transparent p-6 pt-20">
+-                  <h3 className="display text-4xl text-chalk md:text-5xl">Women</h3>
+-                  <p className="label mt-2 text-chalk/80 transition-colors group-hover:text-accent">
+-                    Start something →
+-                  </p>
+-                </div>
+-              </div>
+-            </Link>
+-          </Reveal>
+-        </div>
+-      </section>
++      {/* ——— dual-mood showcase ——— */}
++      <CategoryShowcase />
+ 
+       {/* ——— new this week ——— */}
+-      <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 md:pb-24" aria-labelledby="new-heading">
++      <section
++        className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 md:pb-24"
++        aria-labelledby="new-heading"
++      >
+         <Reveal className="mb-8 flex items-end justify-between">
+-          <h2 id="new-heading" className="display text-3xl md:text-4xl">
+-            New this week
+-          </h2>
+-          <Link href="/new-arrivals" className="label shrink-0 hover:text-accent">
++          <div>
++            <p className="label text-ink-3">Fresh off the press</p>
++            <h2 id="new-heading" className="display mt-2 text-3xl md:text-4xl">
++              New this week
++            </h2>
++          </div>
++          <Link
++            href="/new-arrivals"
++            className="label shrink-0 hover:text-accent"
++          >
+             View all →
+           </Link>
+         </Reveal>
+@@ -172,12 +67,18 @@ export default function Home() {
+         </div>
+       </section>
+ 
++      {/* ——— craftsmanship & trust ——— */}
++      <TrustStrip />
++
+       {/* ——— campaign ——— */}
+-      <section className="relative overflow-hidden" aria-labelledby="campaign-heading">
++      <section
++        className="relative overflow-hidden"
++        aria-labelledby="campaign-heading"
++      >
+         <div className="relative h-[70vh] min-h-[420px]">
+           <Image
+-            src={editorial.crowd}
+-            alt="A crowd of friends on a city bench"
++            src={editorial.heroMain}
++            alt="Sunstrike Co-ord in turmeric, shot on a basketball court"
+             fill
+             sizes="100vw"
+             className="object-cover"
+@@ -187,9 +88,14 @@ export default function Home() {
+             <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+               <Reveal>
+                 <p className="label text-chalk/70">The point of all this</p>
+-                <h2 id="campaign-heading" className="display mt-4 max-w-3xl text-4xl text-chalk md:text-6xl">
++                <h2
++                  id="campaign-heading"
++                  className="display mt-4 max-w-3xl text-4xl text-chalk md:text-6xl"
++                >
+                   A rabble is just a crowd{" "}
+-                  <span className="serif-note lowercase text-butter">with a point of view.</span>
++                  <span className="serif-note lowercase text-butter">
++                    with a point of view.
++                  </span>
+                 </h2>
+                 <Link href="/about" className="btn btn-chalk mt-8">
+                   Read the manifesto
+diff --git a/components/CategoryShowcase.tsx b/components/CategoryShowcase.tsx
+new file mode 100644
+index 0000000..52712d9
+--- /dev/null
++++ b/components/CategoryShowcase.tsx
+@@ -0,0 +1,215 @@
++"use client";
++
++import Image from "next/image";
++import Link from "next/link";
++import { motion, useReducedMotion } from "framer-motion";
++import { useRef, useState } from "react";
++import GarmentCutout from "./GarmentCutout";
++import Reveal from "./Reveal";
++import { RACK } from "@/lib/rack";
++import { editorial } from "@/lib/products";
++
++const PRINT_SPECS = ["Puff Ink", "High-Density Screen Print", "240 GSM"];
++const ATELIER_TAGS = ["Co-ords", "Draped Fits", "Limited Boutique Pieces"];
++
++/**
++ * Dual-mood editorial split: The Print Lab (graphic tees, flips front → back
++ * on hover) and The Atelier Edit (women's boutique, parallax on hover).
++ */
++export default function CategoryShowcase() {
++  const reduced = useReducedMotion() ?? false;
++  const tee = RACK.find((r) => r.slug === "reprint-tee-01")!;
++  const [labHover, setLabHover] = useState(false);
++
++  // pointer parallax for the atelier card
++  const atelierRef = useRef<HTMLDivElement>(null);
++  const [tilt, setTilt] = useState({ x: 0, y: 0 });
++  const onMove = (e: React.PointerEvent) => {
++    if (reduced) return;
++    const r = atelierRef.current?.getBoundingClientRect();
++    if (!r) return;
++    setTilt({
++      x: ((e.clientX - r.left) / r.width - 0.5) * 2,
++      y: ((e.clientY - r.top) / r.height - 0.5) * 2,
++    });
++  };
++
++  return (
++    <section
++      className="mx-auto max-w-7xl px-4 py-16 sm:px-6 md:py-24"
++      aria-label="Shop by mood"
++    >
++      <Reveal className="mb-8 flex flex-wrap items-end justify-between gap-4">
++        <div>
++          <p className="label text-ink-3">Two moods, one crowd</p>
++          <h2 className="display mt-2 text-4xl md:text-5xl">Pick your noise</h2>
++        </div>
++        <p className="serif-note max-w-xs text-right text-lg text-ink-2">
++          Loud prints for the front row. Quiet tailoring for the after-party.
++        </p>
++      </Reveal>
++
++      <div className="grid gap-5 md:grid-cols-[1.15fr_1fr]">
++        {/* ——— Card 1: The Print Lab ——— */}
++        <Reveal>
++          <Link
++            href="/men"
++            className="group relative block overflow-hidden rounded-md bg-carbon text-chalk"
++            onMouseEnter={() => setLabHover(true)}
++            onMouseLeave={() => setLabHover(false)}
++            onFocus={() => setLabHover(true)}
++            onBlur={() => setLabHover(false)}
++          >
++            <div className="relative grid min-h-[30rem] grid-cols-[1fr_auto] md:min-h-[36rem]">
++              {/* copy */}
++              <div className="relative z-10 flex flex-col justify-between p-6 md:p-8">
++                <div>
++                  <p className="label text-chalk/60">
++                    Graphic &amp; oversized tees
++                  </p>
++                  <h3 className="display mt-3 text-4xl md:text-6xl">
++                    The
++                    <br />
++                    Print
++                    <br />
++                    Lab
++                  </h3>
++                </div>
++                <div>
++                  <ul className="flex flex-wrap gap-2">
++                    {PRINT_SPECS.map((t) => (
++                      <li
++                        key={t}
++                        className="rounded-full border border-chalk/25 px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-chalk/90"
++                      >
++                        {t}
++                      </li>
++                    ))}
++                  </ul>
++                  <p className="label mt-6 text-chalk/70 transition-colors group-hover:text-butter">
++                    {labHover ? "Back print →" : "Front print →"}
++                  </p>
++                </div>
++              </div>
++
++              {/* the tee: flips to the back print on hover */}
++              <div
++                className="relative w-[46%] min-w-[12rem] md:w-[20rem]"
++                style={{ perspective: 1200 }}
++              >
++                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,rgb(255_255_255/0.14),transparent_60%)]" />
++                <motion.div
++                  initial={false}
++                  animate={{ rotateY: labHover ? 180 : 0 }}
++                  transition={
++                    reduced
++                      ? { duration: 0 }
++                      : {
++                          type: "spring",
++                          stiffness: 110,
++                          damping: 18,
++                          mass: 0.9,
++                        }
++                  }
++                  className="absolute inset-x-0 top-6 bottom-0"
++                  style={{ transformStyle: "preserve-3d" }}
++                >
++                  <div
++                    className="absolute inset-0"
++                    style={{ backfaceVisibility: "hidden" }}
++                  >
++                    <GarmentCutout
++                      kind="tee"
++                      view="front"
++                      body={tee.body}
++                      shade={tee.shade}
++                      ink={tee.ink}
++                      print={tee.frontPrint}
++                      className="garment-shadow h-full w-full"
++                    />
++                  </div>
++                  <div
++                    className="absolute inset-0"
++                    style={{
++                      backfaceVisibility: "hidden",
++                      transform: "rotateY(180deg)",
++                    }}
++                  >
++                    <GarmentCutout
++                      kind="tee"
++                      view="back"
++                      body={tee.body}
++                      shade={tee.shade}
++                      ink={tee.ink}
++                      print={tee.backPrint}
++                      className="garment-shadow h-full w-full"
++                    />
++                  </div>
++                </motion.div>
++              </div>
++            </div>
++            <span className="absolute bottom-6 right-6 z-10 rounded-full border border-chalk/30 px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-chalk/80">
++              {labHover ? "Back" : "Front"}
++            </span>
++          </Link>
++        </Reveal>
++
++        {/* ——— Card 2: The Atelier Edit ——— */}
++        <Reveal delay={100}>
++          <Link
++            href="/women"
++            className="group relative block overflow-hidden rounded-md bg-sand text-ink"
++            onPointerMove={onMove}
++            onPointerLeave={() => setTilt({ x: 0, y: 0 })}
++          >
++            <div
++              ref={atelierRef}
++              className="relative min-h-[30rem] md:min-h-[36rem]"
++            >
++              <motion.div
++                animate={{ x: tilt.x * -10, y: tilt.y * -8, scale: 1.08 }}
++                transition={{ type: "spring", stiffness: 60, damping: 18 }}
++                className="absolute inset-0"
++              >
++                <Image
++                  src={editorial.womenCover}
++                  alt="Boutique editorial look with a wide-brim hat"
++                  fill
++                  sizes="(min-width: 768px) 45vw, 100vw"
++                  className="object-cover"
++                />
++              </motion.div>
++              <div className="absolute inset-0 bg-gradient-to-t from-ivory via-ivory/40 to-transparent" />
++              <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
++                <p className="label text-ink-3">
++                  Women&rsquo;s boutique collection
++                </p>
++                <h3 className="display mt-3 text-4xl md:text-6xl">
++                  The Atelier{" "}
++                  <span className="serif-note lowercase text-accent">edit</span>
++                </h3>
++                <p className="serif-note mt-3 max-w-xs text-lg text-ink-2">
++                  Sandstone, ivory and the kind of drape that makes a doorway
++                  feel like a runway.
++                </p>
++                <ul className="mt-5 flex flex-wrap gap-2">
++                  {ATELIER_TAGS.map((t) => (
++                    <li
++                      key={t}
++                      className="rounded-full border border-ink/20 bg-ivory/70 px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-ink-2 backdrop-blur-sm"
++                    >
++                      {t}
++                    </li>
++                  ))}
++                </ul>
++                <p className="label mt-6 text-ink transition-colors group-hover:text-accent">
++                  Enter the atelier →
++                </p>
++              </div>
++            </div>
++          </Link>
++        </Reveal>
++      </div>
++    </section>
++  );
++}
+diff --git a/components/GarmentArt.tsx b/components/GarmentArt.tsx
+deleted file mode 100644
+index c196a56..0000000
+--- a/components/GarmentArt.tsx
++++ /dev/null
+@@ -1,281 +0,0 @@
+-/**
+- * Illustrated garments for the hanging rail.
+- * Each garment is drawn in a 200×300 viewBox, hanging from a wooden hanger
+- * whose hook sits at (100, 10) — the rail component pivots items around that point.
+- */
+-
+-export type GarmentKind =
+-  | "hoodie"
+-  | "cropped-hoodie"
+-  | "tee"
+-  | "graphic-tee"
+-  | "crew"
+-  | "trucker"
+-  | "bomber";
+-
+-export interface GarmentColors {
+-  body: string;
+-  shade: string;
+-  detail?: string;
+-}
+-
+-function Hanger() {
+-  return (
+-    <g>
+-      {/* hook */}
+-      <path
+-        d="M100 34 L100 24 C100 14 92 10 86 14"
+-        fill="none"
+-        stroke="#8f8e88"
+-        strokeWidth="3.5"
+-        strokeLinecap="round"
+-      />
+-      {/* wooden bar */}
+-      <path
+-        d="M100 32 L170 66 C174 68 172 74 168 73 L100 42 L32 73 C28 74 26 68 30 66 Z"
+-        fill="#a06c42"
+-      />
+-      <path d="M100 32 L170 66 C174 68 172 74 168 73 L100 42 Z" fill="#8d5c36" />
+-    </g>
+-  );
+-}
+-
+-function Hoodie({ c, cropped = false }: { c: GarmentColors; cropped?: boolean }) {
+-  const hem = cropped ? 216 : 268;
+-  const sleeveHem = cropped ? 210 : 252;
+-  return (
+-    <g>
+-      {/* hood behind */}
+-      <path
+-        d="M70 72 C68 50 132 50 130 72 C126 88 74 88 70 72 Z"
+-        fill={c.shade}
+-      />
+-      {/* sleeves */}
+-      <path
+-        d={`M44 84 C30 92 24 150 26 ${sleeveHem} L52 ${sleeveHem} C50 170 50 120 56 90 Z`}
+-        fill={c.shade}
+-      />
+-      <path
+-        d={`M156 84 C170 92 176 150 174 ${sleeveHem} L148 ${sleeveHem} C150 170 150 120 144 90 Z`}
+-        fill={c.shade}
+-      />
+-      {/* body */}
+-      <path
+-        d={`M52 86 C48 140 46 200 50 ${hem} L150 ${hem} C154 200 152 140 148 86 C120 76 80 76 52 86 Z`}
+-        fill={c.body}
+-      />
+-      {/* hood opening */}
+-      <path
+-        d="M76 78 C78 64 122 64 124 78 C118 90 82 90 76 78 Z"
+-        fill={c.body}
+-      />
+-      <path
+-        d="M80 78 C84 70 116 70 120 78 C114 86 86 86 80 78 Z"
+-        fill={c.shade}
+-        opacity="0.55"
+-      />
+-      {/* drawstrings */}
+-      <path d="M94 86 L92 112 M106 86 L108 112" stroke={c.shade} strokeWidth="2.5" strokeLinecap="round" />
+-      {/* kangaroo pocket */}
+-      <path
+-        d={`M72 ${hem - 54} L128 ${hem - 54} L122 ${hem - 16} L78 ${hem - 16} Z`}
+-        fill="none"
+-        stroke={c.shade}
+-        strokeWidth="2.5"
+-        strokeLinejoin="round"
+-        opacity="0.7"
+-      />
+-      {/* hem rib */}
+-      <rect x="50" y={hem - 2} width="100" height="8" rx="3" fill={c.shade} />
+-      {/* soft fold shadow */}
+-      <path d={`M60 95 C58 150 57 210 59 ${hem}`} stroke="#000" strokeWidth="5" opacity="0.05" fill="none" />
+-    </g>
+-  );
+-}
+-
+-function Tee({ c, print = false }: { c: GarmentColors; print?: boolean }) {
+-  return (
+-    <g>
+-      {/* sleeves */}
+-      <path d="M48 82 C30 92 24 118 30 138 L58 128 C54 112 54 96 58 86 Z" fill={c.shade} />
+-      <path d="M152 82 C170 92 176 118 170 138 L142 128 C146 112 146 96 142 86 Z" fill={c.shade} />
+-      {/* body */}
+-      <path
+-        d="M56 84 C52 140 50 190 54 240 L146 240 C150 190 148 140 144 84 C116 74 84 74 56 84 Z"
+-        fill={c.body}
+-      />
+-      {/* collar */}
+-      <path
+-        d="M82 78 C88 88 112 88 118 78 C112 72 88 72 82 78 Z"
+-        fill={c.shade}
+-      />
+-      {print && c.detail && (
+-        <g>
+-          <rect x="72" y="118" width="56" height="64" rx="3" fill="none" stroke={c.detail} strokeWidth="4" />
+-          <text
+-            x="100"
+-            y="144"
+-            textAnchor="middle"
+-            fontSize="17"
+-            fontWeight="800"
+-            fill={c.detail}
+-            style={{ letterSpacing: "0.08em" }}
+-          >
+-            RBL
+-          </text>
+-          <text
+-            x="100"
+-            y="168"
+-            textAnchor="middle"
+-            fontSize="10"
+-            fontWeight="600"
+-            fill={c.detail}
+-            style={{ letterSpacing: "0.22em" }}
+-          >
+-            AW26
+-          </text>
+-        </g>
+-      )}
+-      <path d="M64 92 C61 150 60 200 62 238" stroke="#000" strokeWidth="5" opacity="0.05" fill="none" />
+-    </g>
+-  );
+-}
+-
+-function Crew({ c }: { c: GarmentColors }) {
+-  return (
+-    <g>
+-      {/* sleeves */}
+-      <path d="M46 84 C30 94 24 150 26 248 L52 248 C50 170 50 120 56 90 Z" fill={c.shade} />
+-      <path d="M154 84 C170 94 176 150 174 248 L148 248 C150 170 150 120 144 90 Z" fill={c.shade} />
+-      <rect x="25" y="244" width="28" height="9" rx="3.5" fill={c.shade} opacity="0.75" />
+-      <rect x="147" y="244" width="28" height="9" rx="3.5" fill={c.shade} opacity="0.75" />
+-      {/* body */}
+-      <path
+-        d="M54 86 C50 140 48 200 52 258 L148 258 C152 200 150 140 146 86 C118 76 82 76 54 86 Z"
+-        fill={c.body}
+-      />
+-      {/* collar rib */}
+-      <path d="M80 80 C86 90 114 90 120 80 C112 73 88 73 80 80 Z" fill={c.shade} />
+-      {/* hem rib */}
+-      <rect x="52" y="254" width="96" height="9" rx="3.5" fill={c.shade} />
+-      <path d="M62 94 C59 150 58 210 60 256" stroke="#000" strokeWidth="5" opacity="0.05" fill="none" />
+-    </g>
+-  );
+-}
+-
+-function Trucker({ c }: { c: GarmentColors }) {
+-  return (
+-    <g>
+-      {/* sleeves */}
+-      <path d="M44 86 C28 96 24 150 26 240 L52 240 C50 168 50 120 56 92 Z" fill={c.shade} />
+-      <path d="M156 86 C172 96 176 150 174 240 L148 240 C150 168 150 120 144 92 Z" fill={c.shade} />
+-      {/* body */}
+-      <path
+-        d="M52 88 C48 140 46 196 50 246 L150 246 C154 196 152 140 148 88 C120 78 80 78 52 88 Z"
+-        fill={c.body}
+-      />
+-      {/* corduroy collar */}
+-      <path d="M74 82 L100 96 L126 82 C118 72 82 72 74 82 Z" fill={c.detail ?? "#b78e5a"} />
+-      {/* placket */}
+-      <path d="M100 96 L100 246" stroke={c.shade} strokeWidth="3" />
+-      <path d="M93 96 L93 246 M107 96 L107 246" stroke={c.shade} strokeWidth="1.5" opacity="0.6" />
+-      {/* buttons */}
+-      {[112, 142, 172, 202, 232].map((y) => (
+-        <circle key={y} cx="100" cy={y} r="2.6" fill={c.detail ?? "#b78e5a"} />
+-      ))}
+-      {/* chest pockets with flaps */}
+-      <g stroke={c.shade} strokeWidth="2.5" fill="none" strokeLinejoin="round">
+-        <path d="M62 128 L86 128 L85 152 L63 152 Z" />
+-        <path d="M62 128 L86 128 L84 136 L64 136 Z" fill={c.shade} opacity="0.5" />
+-        <path d="M114 128 L138 128 L137 152 L115 152 Z" />
+-        <path d="M114 128 L138 128 L136 136 L116 136 Z" fill={c.shade} opacity="0.5" />
+-      </g>
+-      {/* waistband */}
+-      <rect x="50" y="242" width="100" height="9" rx="3.5" fill={c.shade} />
+-      {/* seam shading */}
+-      <path d="M60 96 C57 150 56 200 58 244" stroke="#000" strokeWidth="5" opacity="0.06" fill="none" />
+-    </g>
+-  );
+-}
+-
+-function Bomber({ c }: { c: GarmentColors }) {
+-  return (
+-    <g>
+-      {/* sleeves — fuller */}
+-      <path d="M42 88 C24 100 20 160 24 238 L54 238 C50 170 50 124 58 94 Z" fill={c.shade} />
+-      <path d="M158 88 C176 100 180 160 176 238 L146 238 C150 170 150 124 142 94 Z" fill={c.shade} />
+-      <rect x="23" y="233" width="32" height="10" rx="4" fill={c.shade} opacity="0.8" />
+-      <rect x="145" y="233" width="32" height="10" rx="4" fill={c.shade} opacity="0.8" />
+-      {/* body — rounded, cropped */}
+-      <path
+-        d="M54 90 C46 140 46 200 52 240 L148 240 C154 200 154 140 146 90 C118 78 82 78 54 90 Z"
+-        fill={c.body}
+-      />
+-      {/* ribbed collar */}
+-      <path d="M78 82 C84 92 116 92 122 82 C114 74 86 74 78 82 Z" fill={c.shade} />
+-      {/* zip */}
+-      <path d="M100 92 L100 240" stroke={c.shade} strokeWidth="3.5" />
+-      <path d="M100 100 L100 240" stroke="#fff" strokeWidth="1" opacity="0.35" strokeDasharray="2 3" />
+-      {/* slant pockets */}
+-      <path d="M64 188 L84 206 M136 188 L116 206" stroke={c.shade} strokeWidth="3" strokeLinecap="round" />
+-      {/* hem rib */}
+-      <rect x="52" y="236" width="96" height="10" rx="4" fill={c.shade} />
+-      <path d="M62 100 C58 150 58 200 60 236" stroke="#000" strokeWidth="5" opacity="0.06" fill="none" />
+-    </g>
+-  );
+-}
+-
+-const GARMENTS: Record<GarmentKind, (c: GarmentColors) => React.ReactNode> = {
+-  hoodie: (c) => <Hoodie c={c} />,
+-  "cropped-hoodie": (c) => <Hoodie c={c} cropped />,
+-  tee: (c) => <Tee c={c} />,
+-  "graphic-tee": (c) => <Tee c={c} print />,
+-  crew: (c) => <Crew c={c} />,
+-  trucker: (c) => <Trucker c={c} />,
+-  bomber: (c) => <Bomber c={c} />,
+-};
+-
+-interface GarmentArtProps {
+-  kind: GarmentKind;
+-  colors: GarmentColors;
+-  tag?: string;
+-  tagTone?: "ink" | "accent";
+-  className?: string;
+-}
+-
+-export default function GarmentArt({ kind, colors, tag, tagTone = "ink", className }: GarmentArtProps) {
+-  return (
+-    <svg viewBox="0 0 200 300" className={className} aria-hidden="true" focusable="false">
+-      {/* soft drop shadow under garment */}
+-      <ellipse cx="100" cy="292" rx="58" ry="5" fill="#000" opacity="0.05" />
+-      {GARMENTS[kind](colors)}
+-      <Hanger />
+-      {tag && (
+-        <g transform="rotate(14 100 40)">
+-          <line x1="100" y1="38" x2="128" y2="66" stroke="#8f8e88" strokeWidth="1.5" />
+-          <g transform="rotate(8 128 66)">
+-            <rect
+-              x="118"
+-              y="64"
+-              width={tag.length * 7 + 18}
+-              height="22"
+-              rx="3"
+-              fill={tagTone === "accent" ? "#6e2a35" : "#1b1a16"}
+-            />
+-            <circle cx="126" cy="75" r="2.2" fill="#f2efe8" opacity="0.9" />
+-            <text
+-              x="133"
+-              y="79"
+-              fontSize="10.5"
+-              fontWeight="700"
+-              fill="#f2efe8"
+-              style={{ letterSpacing: "0.1em" }}
+-            >
+-              {tag}
+-            </text>
+-          </g>
+-        </g>
+-      )}
+-    </svg>
+-  );
+-}
+diff --git a/components/GarmentCutout.tsx b/components/GarmentCutout.tsx
+new file mode 100644
+index 0000000..0f11468
+--- /dev/null
++++ b/components/GarmentCutout.tsx
+@@ -0,0 +1,833 @@
++"use client";
++
++import { useId } from "react";
++
++/**
++ * GarmentCutout — a studio-style garment render that hangs from a hook.
++ *
++ * Renders in a 300×440 viewBox. The hanger hook sits at (150, 14); the rack
++ * pivots every item around that point for the pendulum sway.
++ *
++ * Three visual states:
++ *   view="front"  chest graphic / boutique front silhouette
++ *   view="back"   full back print
++ *   view="side"   the compressed hanging-sideways fold (used for inactive rail items)
++ *
++ * Two render modes:
++ *   - procedural: a vector silhouette with fabric grain, fold shading, rib
++ *     trims and seam stitching (default — no assets needed)
++ *   - photographic: pass `image` (a transparent PNG / WebP cutout) and the
++ *     photo is masked into the silhouette instead of the flat fabric fill.
++ */
++
++export type GarmentKind =
++  "tee" | "hoodie" | "cropped-hoodie" | "crew" | "dress";
++export type GarmentView = "front" | "back" | "side";
++export type PrintId =
++  | "mark-chest"
++  | "reprint-chest"
++  | "reprint-back"
++  | "wave-back"
++  | "crowd-back"
++  | "arc-back";
++
++export interface GarmentCutoutProps {
++  kind: GarmentKind;
++  view?: GarmentView;
++  body: string;
++  shade: string;
++  ink?: string;
++  print?: PrintId;
++  /** optional transparent cutout photo for this view */
++  image?: string;
++  tag?: string;
++  tagTone?: "ink" | "accent" | "cobalt";
++  /** draw the hanger (off for the compact side preview on tiny screens) */
++  hanger?: boolean;
++  className?: string;
++  style?: React.CSSProperties;
++}
++
++/* ———————————————————————————— silhouettes ———————————————————————————— */
++
++interface Silhouette {
++  /** full outer outline (used as clip + base fill) */
++  outline: string;
++  /** sleeves drawn in the darker tone, behind/over the body */
++  sleeves?: string[];
++  /** the body only (receives the print + fold shading) */
++  body: string;
++  /** bottom of the body, for hem ribs */
++  hemY: number;
++  /** vertical span of the printable area */
++  printBox: { x: number; y: number; w: number; h: number };
++}
++
++const TEE: Silhouette = {
++  outline:
++    "M118 96 C132 90 168 90 182 96 L236 110 C250 118 262 150 262 178 L222 192 C220 240 220 290 222 334 L78 334 C80 290 80 240 78 192 L38 178 C38 150 50 118 64 110 Z",
++  sleeves: [
++    "M64 110 C50 118 38 150 38 178 L84 194 L96 172 C90 150 90 128 100 108 Z",
++    "M236 110 C250 118 262 150 262 178 L216 194 L204 172 C210 150 210 128 200 108 Z",
++  ],
++  body: "M92 108 C84 170 80 250 78 334 L222 334 C220 250 216 170 208 108 C176 96 124 96 92 108 Z",
++  hemY: 334,
++  printBox: { x: 100, y: 150, w: 100, h: 140 },
++};
++
++const HOODIE: Silhouette = {
++  outline:
++    "M112 96 C130 88 170 88 188 96 L236 108 C254 116 264 200 258 356 L220 356 L220 366 L80 366 L80 356 L42 356 C36 200 46 116 64 108 Z",
++  sleeves: [
++    "M64 108 C46 116 36 200 42 356 L84 356 C84 260 86 180 100 110 Z",
++    "M236 108 C254 116 264 200 258 356 L216 356 C216 260 214 180 200 110 Z",
++  ],
++  body: "M94 108 C86 170 82 260 82 366 L218 366 C218 260 214 170 206 108 C176 96 124 96 94 108 Z",
++  hemY: 366,
++  printBox: { x: 100, y: 170, w: 100, h: 150 },
++};
++
++const CROPPED: Silhouette = {
++  outline:
++    "M112 96 C130 88 170 88 188 96 L236 108 C254 116 264 200 258 292 L220 292 L220 302 L80 302 L80 292 L42 292 C36 200 46 116 64 108 Z",
++  sleeves: [
++    "M64 108 C46 116 36 200 42 292 L84 292 C84 260 86 180 100 110 Z",
++    "M236 108 C254 116 264 200 258 292 L216 292 C216 260 214 180 200 110 Z",
++  ],
++  body: "M94 108 C86 170 82 260 82 302 L218 302 C218 260 214 170 206 108 C176 96 124 96 94 108 Z",
++  hemY: 302,
++  printBox: { x: 100, y: 160, w: 100, h: 110 },
++};
++
++const CREW: Silhouette = {
++  outline:
++    "M112 96 C130 88 170 88 188 96 L236 108 C254 116 264 200 258 346 L220 346 L220 356 L80 356 L80 346 L42 346 C36 200 46 116 64 108 Z",
++  sleeves: [
++    "M64 108 C46 116 36 200 42 346 L84 346 C84 260 86 180 100 110 Z",
++    "M236 108 C254 116 264 200 258 346 L216 346 C216 260 214 180 200 110 Z",
++  ],
++  body: "M94 108 C86 170 82 260 82 356 L218 356 C218 260 214 170 206 108 C176 96 124 96 94 108 Z",
++  hemY: 356,
++  printBox: { x: 100, y: 170, w: 100, h: 150 },
++};
++
++const DRESS: Silhouette = {
++  outline:
++    "M104 96 C110 94 118 102 124 112 C140 104 160 104 176 112 C182 102 190 94 196 96 C206 130 212 160 214 188 C224 250 236 320 242 400 L58 400 C64 320 76 250 86 188 C88 160 94 130 104 96 Z",
++  body: "M104 96 C110 94 118 102 124 112 C140 104 160 104 176 112 C182 102 190 94 196 96 C206 130 212 160 214 188 C224 250 236 320 242 400 L58 400 C64 320 76 250 86 188 C88 160 94 130 104 96 Z",
++  hemY: 400,
++  printBox: { x: 110, y: 200, w: 80, h: 120 },
++};
++
++const SHAPES: Record<GarmentKind, Silhouette> = {
++  tee: TEE,
++  hoodie: HOODIE,
++  "cropped-hoodie": CROPPED,
++  crew: CREW,
++  dress: DRESS,
++};
++
++/* ———————————————————————————— prints ———————————————————————————— */
++
++function Print({
++  id,
++  ink,
++  box,
++  uid,
++}: {
++  id: PrintId;
++  ink: string;
++  box: Silhouette["printBox"];
++  uid: string;
++}) {
++  const cx = box.x + box.w / 2;
++  switch (id) {
++    case "mark-chest":
++      return (
++        <g fill={ink}>
++          <text
++            x={box.x + 6}
++            y={box.y + 14}
++            fontSize="11"
++            fontWeight="800"
++            letterSpacing="0.1em"
++          >
++            RBL.
++          </text>
++          <rect x={box.x + 6} y={box.y + 18} width="26" height="1.5" />
++        </g>
++      );
++    case "reprint-chest":
++      return (
++        <g fill={ink} stroke={ink}>
++          <rect
++            x={cx - 30}
++            y={box.y + 8}
++            width="60"
++            height="34"
++            fill="none"
++            strokeWidth="2.5"
++          />
++          <text
++            x={cx}
++            y={box.y + 24}
++            textAnchor="middle"
++            fontSize="11"
++            fontWeight="800"
++            stroke="none"
++            letterSpacing="0.14em"
++          >
++            REPRINT
++          </text>
++          <text
++            x={cx}
++            y={box.y + 36}
++            textAnchor="middle"
++            fontSize="8"
++            fontWeight="600"
++            stroke="none"
++            letterSpacing="0.3em"
++          >
++            01 · AW26
++          </text>
++        </g>
++      );
++    case "reprint-back":
++      return (
++        <g fill={ink}>
++          <rect
++            x={box.x - 4}
++            y={box.y - 6}
++            width={box.w + 8}
++            height={box.h + 12}
++            fill="none"
++            stroke={ink}
++            strokeWidth="3"
++          />
++          <text
++            x={cx}
++            y={box.y + 40}
++            textAnchor="middle"
++            fontSize="40"
++            fontWeight="900"
++            letterSpacing="-0.02em"
++          >
++            NO
++          </text>
++          <text
++            x={cx}
++            y={box.y + 76}
++            textAnchor="middle"
++            fontSize="40"
++            fontWeight="900"
++            letterSpacing="-0.02em"
++          >
++            RE-
++          </text>
++          <text
++            x={cx}
++            y={box.y + 112}
++            textAnchor="middle"
++            fontSize="28"
++            fontWeight="900"
++            letterSpacing="0.02em"
++          >
++            STOCKS
++          </text>
++          {Array.from({ length: 22 }, (_, i) => (
++            <rect
++              key={i}
++              x={box.x + 4 + i * 4.2}
++              y={box.y + 120}
++              width={i % 3 === 0 ? 2.4 : 1.2}
++              height="12"
++            />
++          ))}
++          <text
++            x={cx}
++            y={box.y + 148}
++            textAnchor="middle"
++            fontSize="7"
++            fontWeight="700"
++            letterSpacing="0.28em"
++          >
++            ONE-RUN PRINT · 01/01
++          </text>
++        </g>
++      );
++    case "wave-back": {
++      const bars = [
++        8, 18, 34, 54, 42, 70, 96, 60, 80, 110, 74, 50, 88, 40, 26, 46, 20, 10,
++      ];
++      return (
++        <g fill={ink}>
++          {bars.map((h, i) => (
++            <rect
++              key={i}
++              x={box.x + 4 + i * 5.2}
++              y={box.y + 70 - h / 2}
++              width="3.2"
++              height={h}
++              rx="1.6"
++            />
++          ))}
++          <text
++            x={cx}
++            y={box.y + 150}
++            textAnchor="middle"
++            fontSize="9"
++            fontWeight="800"
++            letterSpacing="0.28em"
++          >
++            NOISE YOU CAN WEAR
++          </text>
++        </g>
++      );
++    }
++    case "crowd-back":
++      return (
++        <g fill="none" stroke={ink} strokeWidth="3">
++          {[14, 28, 42, 56].map((r) => (
++            <circle key={r} cx={cx} cy={box.y + 66} r={r} />
++          ))}
++          <text
++            x={cx}
++            y={box.y + 150}
++            textAnchor="middle"
++            fontSize="18"
++            fontWeight="900"
++            fill={ink}
++            stroke="none"
++            letterSpacing="0.12em"
++          >
++            RABBLE
++          </text>
++        </g>
++      );
++    case "arc-back":
++      return (
++        <g fill={ink}>
++          <defs>
++            <path
++              id={`${uid}-arc`}
++              d={`M ${cx - 46} ${box.y + 44} A 46 46 0 0 1 ${cx + 46} ${box.y + 44}`}
++            />
++          </defs>
++          <text fontSize="13" fontWeight="800" letterSpacing="0.3em">
++            <textPath
++              href={`#${uid}-arc`}
++              startOffset="50%"
++              textAnchor="middle"
++            >
++              RABBLE
++            </textPath>
++          </text>
++          <text
++            x={cx}
++            y={box.y + 60}
++            textAnchor="middle"
++            fontSize="7"
++            fontWeight="600"
++            letterSpacing="0.3em"
++          >
++            EST. AW26
++          </text>
++        </g>
++      );
++  }
++}
++
++/* ———————————————————————————— hanger + tag ———————————————————————————— */
++
++function Hanger({ uid }: { uid: string }) {
++  return (
++    <g>
++      <defs>
++        <linearGradient id={`${uid}-wood`} x1="0" x2="0" y1="0" y2="1">
++          <stop offset="0" stopColor="#b8864f" />
++          <stop offset="0.45" stopColor="#9a6a3b" />
++          <stop offset="1" stopColor="#6e4826" />
++        </linearGradient>
++        <linearGradient id={`${uid}-steel`} x1="0" x2="1" y1="0" y2="0">
++          <stop offset="0" stopColor="#6d6d71" />
++          <stop offset="0.5" stopColor="#c9c9cc" />
++          <stop offset="1" stopColor="#7a7a7e" />
++        </linearGradient>
++      </defs>
++      {/* hook */}
++      <path
++        d="M150 52 L150 30 C150 16 140 11 133 16"
++        fill="none"
++        stroke={`url(#${uid}-steel)`}
++        strokeWidth="4"
++        strokeLinecap="round"
++      />
++      {/* swivel collar */}
++      <rect x="146" y="48" width="8" height="7" rx="1.5" fill="#8e8e93" />
++      {/* wooden bar */}
++      <path
++        d="M150 54 L252 100 C258 103 256 112 250 110 L150 66 L50 110 C44 112 42 103 48 100 Z"
++        fill={`url(#${uid}-wood)`}
++      />
++      {/* grain */}
++      <path
++        d="M72 100 L150 64 M90 97 L150 70"
++        stroke="#5c3a1c"
++        strokeWidth="0.6"
++        opacity="0.5"
++        fill="none"
++      />
++      <path
++        d="M228 100 L150 64 M210 97 L150 70"
++        stroke="#5c3a1c"
++        strokeWidth="0.6"
++        opacity="0.5"
++        fill="none"
++      />
++      {/* lower cross bar */}
++      <path
++        d="M58 108 L242 108"
++        stroke="#8e8e93"
++        strokeWidth="2"
++        opacity="0.9"
++      />
++      <path
++        d="M58 108 L242 108"
++        stroke="#fff"
++        strokeWidth="0.6"
++        opacity="0.5"
++      />
++    </g>
++  );
++}
++
++function NeckTag({
++  text,
++  tone,
++  uid,
++}: {
++  text: string;
++  tone: "ink" | "accent" | "cobalt";
++  uid: string;
++}) {
++  const fill =
++    tone === "accent" ? "#6e2a35" : tone === "cobalt" ? "#2438e8" : "#111111";
++  const w = text.length * 5.6 + 14;
++  return (
++    <g transform="rotate(-6 150 44)">
++      <line
++        x1="151"
++        y1="38"
++        x2="160"
++        y2="50"
++        stroke="#8e8e93"
++        strokeWidth="1"
++      />
++      <rect
++        x="156"
++        y="48"
++        width={w}
++        height="18"
++        rx="2"
++        fill={fill}
++        filter={`url(#${uid}-tagshadow)`}
++      />
++      <text
++        x={156 + w / 2}
++        y="60.5"
++        textAnchor="middle"
++        fontSize="8.5"
++        fontWeight="700"
++        fill="#f6f5f0"
++        letterSpacing="0.12em"
++      >
++        {text}
++      </text>
++    </g>
++  );
++}
++
++/* ———————————————————————————— garment ———————————————————————————— */
++
++export default function GarmentCutout({
++  kind,
++  view = "front",
++  body,
++  shade,
++  ink = "#111111",
++  print,
++  image,
++  tag,
++  tagTone = "ink",
++  hanger = true,
++  className,
++  style,
++}: GarmentCutoutProps) {
++  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
++  const s = SHAPES[kind];
++  const isBack = view === "back";
++  const clipId = `${uid}-clip`;
++
++  return (
++    <svg
++      viewBox="0 0 300 440"
++      className={className}
++      style={style}
++      aria-hidden="true"
++      focusable="false"
++      overflow="visible"
++    >
++      <defs>
++        <clipPath id={clipId}>
++          <path d={s.outline} />
++        </clipPath>
++        {/* fabric grain */}
++        <filter id={`${uid}-grain`} x="0" y="0" width="100%" height="100%">
++          <feTurbulence
++            type="fractalNoise"
++            baseFrequency="1.4"
++            numOctaves="2"
++            seed="7"
++            stitchTiles="stitch"
++          />
++          <feColorMatrix type="saturate" values="0" />
++          <feComponentTransfer>
++            <feFuncA type="linear" slope="0.5" intercept="-0.1" />
++          </feComponentTransfer>
++        </filter>
++        {/* soft blur for drape streaks */}
++        <filter id={`${uid}-soft`} x="-20%" y="-20%" width="140%" height="140%">
++          <feGaussianBlur stdDeviation="6" />
++        </filter>
++        <filter
++          id={`${uid}-tagshadow`}
++          x="-20%"
++          y="-40%"
++          width="140%"
++          height="200%"
++        >
++          <feDropShadow dx="0" dy="2" stdDeviation="1.5" floodOpacity="0.25" />
++        </filter>
++        {/* fold shading, left to right */}
++        <linearGradient id={`${uid}-fold`} x1="0" x2="1" y1="0" y2="0">
++          <stop offset="0" stopColor="#000" stopOpacity="0.22" />
++          <stop offset="0.1" stopColor="#000" stopOpacity="0.02" />
++          <stop offset="0.3" stopColor="#fff" stopOpacity="0.16" />
++          <stop offset="0.52" stopColor="#fff" stopOpacity="0" />
++          <stop offset="0.72" stopColor="#000" stopOpacity="0.06" />
++          <stop offset="0.9" stopColor="#000" stopOpacity="0" />
++          <stop offset="1" stopColor="#000" stopOpacity="0.24" />
++        </linearGradient>
++        {/* side-hang fold: heavy shading, like a garment seen edge-on */}
++        <linearGradient id={`${uid}-side`} x1="0" x2="1" y1="0" y2="0">
++          <stop offset="0" stopColor="#000" stopOpacity="0.45" />
++          <stop offset="0.35" stopColor="#000" stopOpacity="0.05" />
++          <stop offset="0.6" stopColor="#fff" stopOpacity="0.18" />
++          <stop offset="1" stopColor="#000" stopOpacity="0.5" />
++        </linearGradient>
++        {/* vertical light: slightly brighter at the shoulders */}
++        <linearGradient id={`${uid}-light`} x1="0" x2="0" y1="0" y2="1">
++          <stop offset="0" stopColor="#fff" stopOpacity="0.14" />
++          <stop offset="0.3" stopColor="#fff" stopOpacity="0" />
++          <stop offset="1" stopColor="#000" stopOpacity="0.1" />
++        </linearGradient>
++      </defs>
++
++      {/* contact shadow on the studio floor */}
++      <ellipse
++        cx="150"
++        cy={s.hemY + 10}
++        rx="80"
++        ry="6"
++        fill="#000"
++        opacity="0.06"
++      />
++
++      {image ? (
++        /* photographic mode — a cutout masked into the silhouette */
++        <g clipPath={`url(#${clipId})`}>
++          <image
++            href={image}
++            x="0"
++            y="40"
++            width="300"
++            height="400"
++            preserveAspectRatio="xMidYMid slice"
++          />
++          <rect
++            x="0"
++            y="0"
++            width="300"
++            height="440"
++            fill={`url(#${uid}-light)`}
++          />
++        </g>
++      ) : (
++        <g>
++          {/* hood, behind the body */}
++          {(kind === "hoodie" || kind === "cropped-hoodie") && (
++            <path
++              d={
++                isBack
++                  ? "M100 96 C104 56 196 56 200 96 C196 118 104 118 100 96 Z"
++                  : "M104 92 C108 62 192 62 196 92 C190 112 110 112 104 92 Z"
++              }
++              fill={isBack ? body : shade}
++            />
++          )}
++          {/* sleeves */}
++          {s.sleeves?.map((d, i) => (
++            <path key={i} d={d} fill={shade} />
++          ))}
++          {/* body */}
++          <path d={s.body} fill={body} />
++          {/* fabric grain over everything */}
++          <g clipPath={`url(#${clipId})`}>
++            <rect
++              x="0"
++              y="0"
++              width="300"
++              height="440"
++              filter={`url(#${uid}-grain)`}
++              opacity="0.35"
++            />
++            <rect
++              x="0"
++              y="0"
++              width="300"
++              height="440"
++              fill={`url(#${uid}-light)`}
++            />
++            <rect
++              x="0"
++              y="0"
++              width="300"
++              height="440"
++              fill={`url(#${view === "side" ? `${uid}-side` : `${uid}-fold`})`}
++            />
++            {/* soft drape streaks */}
++            <g filter={`url(#${uid}-soft)`} opacity="0.5">
++              <path
++                d="M112 130 C106 220 106 290 110 360"
++                stroke="#000"
++                strokeWidth="6"
++                opacity="0.08"
++                fill="none"
++              />
++              <path
++                d="M188 140 C194 220 194 290 190 360"
++                stroke="#000"
++                strokeWidth="5"
++                opacity="0.06"
++                fill="none"
++              />
++              <path
++                d="M150 120 C148 220 148 300 150 380"
++                stroke="#fff"
++                strokeWidth="8"
++                opacity="0.12"
++                fill="none"
++              />
++            </g>
++          </g>
++
++          {/* collar / ribs / details per kind */}
++          {kind === "tee" && (
++            <g>
++              <path
++                d={
++                  isBack
++                    ? "M118 96 C132 102 168 102 182 96 C168 92 132 92 118 96 Z"
++                    : "M118 96 C126 112 174 112 182 96 C168 90 132 90 118 96 Z"
++                }
++                fill={shade}
++              />
++              <path
++                d={
++                  isBack
++                    ? "M118 96 C132 102 168 102 182 96"
++                    : "M118 96 C126 112 174 112 182 96"
++                }
++                fill="none"
++                stroke="#000"
++                strokeWidth="0.8"
++                opacity="0.25"
++              />
++              {/* sleeve hem stitching */}
++              <path
++                d="M48 170 L72 182 M252 170 L228 182"
++                stroke={shade}
++                strokeWidth="1.2"
++                strokeDasharray="2 2"
++                opacity="0.8"
++              />
++            </g>
++          )}
++          {(kind === "hoodie" || kind === "cropped-hoodie") && !isBack && (
++            <g>
++              <path
++                d="M112 94 C118 80 182 80 188 94 C176 108 124 108 112 94 Z"
++                fill={body}
++              />
++              <path
++                d="M118 95 C124 84 176 84 182 95 C172 104 128 104 118 95 Z"
++                fill={shade}
++                opacity="0.35"
++              />
++              <path
++                d="M140 104 L136 140 M160 104 L164 140"
++                stroke={shade}
++                strokeWidth="2.6"
++                strokeLinecap="round"
++              />
++              <circle cx="136" cy="141" r="2" fill={shade} />
++              <circle cx="164" cy="141" r="2" fill={shade} />
++              {/* kangaroo pocket */}
++              <path
++                d={`M104 ${s.hemY - 70} L196 ${s.hemY - 70} L188 ${s.hemY - 22} L112 ${s.hemY - 22} Z`}
++                fill="none"
++                stroke={shade}
++                strokeWidth="2.2"
++                strokeLinejoin="round"
++                opacity="0.75"
++              />
++            </g>
++          )}
++          {kind === "crew" && (
++            <path
++              d={
++                isBack
++                  ? "M112 96 C130 104 170 104 188 96 C170 90 130 90 112 96 Z"
++                  : "M112 96 C124 112 176 112 188 96 C170 88 130 88 112 96 Z"
++              }
++              fill={shade}
++            />
++          )}
++          {kind !== "tee" && kind !== "dress" && (
++            <g>
++              {/* hem + cuff ribs */}
++              <rect
++                x="82"
++                y={s.hemY - 5}
++                width="136"
++                height="10"
++                rx="4"
++                fill={shade}
++              />
++              <rect
++                x="42"
++                y={s.hemY - 16}
++                width="40"
++                height="10"
++                rx="4"
++                fill={shade}
++                opacity="0.9"
++              />
++              <rect
++                x="218"
++                y={s.hemY - 16}
++                width="40"
++                height="10"
++                rx="4"
++                fill={shade}
++                opacity="0.9"
++              />
++              <g stroke="#000" strokeWidth="0.6" opacity="0.18">
++                {Array.from({ length: 30 }, (_, i) => (
++                  <line
++                    key={i}
++                    x1={88 + i * 4.3}
++                    y1={s.hemY - 3}
++                    x2={88 + i * 4.3}
++                    y2={s.hemY + 5}
++                  />
++                ))}
++              </g>
++            </g>
++          )}
++          {kind === "dress" && (
++            <g>
++              {/* elasticated neckline */}
++              <path
++                d="M124 112 C140 104 160 104 176 112"
++                fill="none"
++                stroke={shade}
++                strokeWidth="3"
++              />
++              <path
++                d="M124 116 C140 110 160 110 176 116"
++                fill="none"
++                stroke={shade}
++                strokeWidth="1"
++                opacity="0.6"
++              />
++              {/* waist seam + drape */}
++              <path
++                d="M94 196 C120 190 180 190 206 196"
++                fill="none"
++                stroke={shade}
++                strokeWidth="1.2"
++                opacity="0.7"
++              />
++              <g stroke="#000" opacity="0.07" fill="none" strokeWidth="5">
++                <path d="M118 200 C112 270 104 340 100 398" />
++                <path d="M150 198 C150 270 150 340 150 398" />
++                <path d="M182 200 C188 270 196 340 200 398" />
++              </g>
++              {!isBack && (
++                <g stroke={shade} strokeWidth="1" opacity="0.6" fill="none">
++                  <path d="M88 236 L96 260" />
++                  <path d="M212 236 L204 260" />
++                </g>
++              )}
++            </g>
++          )}
++
++          {/* side seams */}
++          <path
++            d={`M86 120 C84 200 84 280 86 ${s.hemY}`}
++            fill="none"
++            stroke="#000"
++            strokeWidth="0.7"
++            opacity="0.14"
++          />
++          <path
++            d={`M214 120 C216 200 216 280 214 ${s.hemY}`}
++            fill="none"
++            stroke="#000"
++            strokeWidth="0.7"
++            opacity="0.14"
++          />
++
++          {/* print */}
++          {print && view !== "side" && (
++            <g
++              clipPath={`url(#${clipId})`}
++              style={{ mixBlendMode: "multiply" }}
++            >
++              <Print id={print} ink={ink} box={s.printBox} uid={uid} />
++            </g>
++          )}
++          {/* back-neck woven label */}
++          {isBack && (
++            <rect
++              x="143"
++              y="104"
++              width="14"
++              height="8"
++              rx="1"
++              fill="#f6f5f0"
++              stroke={shade}
++              strokeWidth="0.6"
++            />
++          )}
++        </g>
++      )}
++
++      {hanger && <Hanger uid={uid} />}
++      {tag && view !== "side" && (
++        <NeckTag text={tag} tone={tagTone} uid={uid} />
++      )}
++    </svg>
++  );
++}
+diff --git a/components/GarmentRack.tsx b/components/GarmentRack.tsx
+new file mode 100644
+index 0000000..0d3f048
+--- /dev/null
++++ b/components/GarmentRack.tsx
+@@ -0,0 +1,525 @@
++"use client";
++
++import Image from "next/image";
++import Link from "next/link";
++import {
++  AnimatePresence,
++  motion,
++  useAnimate,
++  useReducedMotion,
++  useScroll,
++  useTransform,
++  type Transition,
++} from "framer-motion";
++import { useCallback, useEffect, useRef, useState } from "react";
++import GarmentCutout from "./GarmentCutout";
++import { RACK, type RackItem } from "@/lib/rack";
++import { editorial, formatINR, getProduct } from "@/lib/products";
++
++/* ———————————————————————————— tuning ———————————————————————————— */
++
++const SPRING: Transition = {
++  type: "spring",
++  stiffness: 140,
++  damping: 20,
++  mass: 0.8,
++};
++const EASE_OUT = [0.22, 1, 0.36, 1] as const;
++
++/** side-hang compression: rotateY + scaleX of an inactive garment */
++const TILT = 55;
++const SQUEEZE = 0.55;
++
++interface Sizes {
++  active: number;
++  side: number;
++  gap: number;
++}
++const DESKTOP: Sizes = { active: 380, side: 108, gap: 10 };
++const TABLET: Sizes = { active: 340, side: 96, gap: 8 };
++const MOBILE: Sizes = { active: 228, side: 66, gap: 4 };
++
++function useSizes(): Sizes {
++  const [sizes, setSizes] = useState<Sizes>(DESKTOP);
++  useEffect(() => {
++    const mqDesktop = window.matchMedia("(min-width: 1024px)");
++    const mqTablet = window.matchMedia("(min-width: 640px)");
++    const apply = () =>
++      setSizes(
++        mqDesktop.matches ? DESKTOP : mqTablet.matches ? TABLET : MOBILE,
++      );
++    apply();
++    mqDesktop.addEventListener("change", apply);
++    mqTablet.addEventListener("change", apply);
++    return () => {
++      mqDesktop.removeEventListener("change", apply);
++      mqTablet.removeEventListener("change", apply);
++    };
++  }, []);
++  return sizes;
++}
++
++/* ———————————————————————————— one hanger on the rail ———————————————————————————— */
++
++interface SlotProps {
++  item: RackItem;
++  index: number;
++  active: boolean;
++  flipped: boolean;
++  sizes: Sizes;
++  reduced: boolean;
++  /** which way this item should swing when the rack re-flows (−1, 0, 1) */
++  swayDir: number;
++  swayTick: number;
++  onActivate: (i: number) => void;
++  onFlip: () => void;
++  slotRef: (el: HTMLDivElement | null) => void;
++}
++
++function Slot({
++  item,
++  index,
++  active,
++  flipped,
++  sizes,
++  reduced,
++  swayDir,
++  swayTick,
++  onActivate,
++  onFlip,
++  slotRef,
++}: SlotProps) {
++  const [swayScope, animateSway] = useAnimate();
++  const product = getProduct(item.slug);
++  const height = (sizes.active * 440) / 300;
++
++  // pendulum micro-sway, pivoting on the hook, settling to 0deg
++  useEffect(() => {
++    if (reduced || swayTick === 0 || !swayScope.current) return;
++    const a =
++      (swayDir === 0 ? 1.6 : 3.2) * (swayDir || 1) * (1 + (index % 3) * 0.15);
++    animateSway(
++      swayScope.current,
++      { rotate: [0, a, -a * 0.55, a * 0.25, -a * 0.1, 0] },
++      { duration: 1.6, ease: EASE_OUT },
++    );
++  }, [swayTick, swayDir, reduced, animateSway, swayScope, index]);
++
++  const transition = reduced ? { duration: 0 } : SPRING;
++  const label = product
++    ? `${product.name} — ${formatINR(product.price)}`
++    : item.slug;
++
++  return (
++    <motion.div
++      ref={slotRef}
++      role="button"
++      tabIndex={0}
++      aria-label={
++        active
++          ? `${label}. Press to flip to the ${flipped ? "front" : "back"} print`
++          : `${label}. Press to bring to the front`
++      }
++      aria-pressed={active}
++      initial={false}
++      animate={{ width: active ? sizes.active : sizes.side }}
++      transition={transition}
++      onHoverStart={() => {
++        if (window.matchMedia("(hover: hover)").matches) onActivate(index);
++      }}
++      onFocus={() => onActivate(index)}
++      onClick={() => (active ? onFlip() : onActivate(index))}
++      onKeyDown={(e) => {
++        if (e.key === "Enter" || e.key === " ") {
++          e.preventDefault();
++          if (active) onFlip();
++          else onActivate(index);
++        }
++      }}
++      className={`relative flex shrink-0 cursor-pointer justify-center outline-none ${active ? "z-10" : "z-0"}`}
++      style={{ perspective: 1400, height, marginInline: sizes.gap / 2 }}
++    >
++      {/* sway pivot — origin at the hanger hook */}
++      <div
++        ref={swayScope}
++        className="pointer-events-none shrink-0"
++        style={{ width: sizes.active, height, transformOrigin: "50% 3.2%" }}
++      >
++        {/* side-profile tilt */}
++        <motion.div
++          initial={false}
++          animate={{ rotateY: active ? 0 : TILT, scaleX: active ? 1 : SQUEEZE }}
++          transition={transition}
++          className="relative h-full w-full"
++          style={{ transformStyle: "preserve-3d" }}
++        >
++          {/* front / back flipper */}
++          <motion.div
++            initial={false}
++            animate={{ rotateY: active && flipped ? 180 : 0 }}
++            transition={
++              reduced ? { duration: 0 } : { ...SPRING, stiffness: 120 }
++            }
++            className="relative h-full w-full"
++            style={{ transformStyle: "preserve-3d" }}
++          >
++            {/* front face */}
++            <div
++              className="absolute inset-0"
++              style={{
++                backfaceVisibility: "hidden",
++                WebkitBackfaceVisibility: "hidden",
++              }}
++            >
++              <GarmentCutout
++                kind={item.kind}
++                view="front"
++                body={item.body}
++                shade={item.shade}
++                ink={item.ink}
++                print={item.frontPrint}
++                image={item.frontImage}
++                tag={item.tag}
++                tagTone={item.tagTone}
++                className="garment-shadow h-full w-full"
++              />
++              {/* side-fold shading, fades in as the garment turns away */}
++              <motion.div
++                initial={false}
++                animate={{ opacity: active ? 0 : 1 }}
++                transition={transition}
++                className="pointer-events-none absolute inset-0"
++              >
++                <GarmentCutout
++                  kind={item.kind}
++                  view="side"
++                  body={item.body}
++                  shade={item.shade}
++                  image={item.sidePreview ?? item.frontImage}
++                  hanger={false}
++                  className="h-full w-full"
++                />
++              </motion.div>
++            </div>
++            {/* back face */}
++            <div
++              className="absolute inset-0"
++              style={{
++                backfaceVisibility: "hidden",
++                WebkitBackfaceVisibility: "hidden",
++                transform: "rotateY(180deg)",
++              }}
++            >
++              <GarmentCutout
++                kind={item.kind}
++                view="back"
++                body={item.body}
++                shade={item.shade}
++                ink={item.ink}
++                print={item.backPrint}
++                image={item.backImage}
++                className="garment-shadow h-full w-full"
++              />
++            </div>
++          </motion.div>
++        </motion.div>
++      </div>
++    </motion.div>
++  );
++}
++
++/* ———————————————————————————— the rack ———————————————————————————— */
++
++export default function GarmentRack() {
++  const sizes = useSizes();
++  const reduced = useReducedMotion() ?? false;
++  const [active, setActive] = useState(2); // open on the printed tee
++  const [flipped, setFlipped] = useState(false);
++  const [swayTick, setSwayTick] = useState(0);
++  const activeRef = useRef(2);
++  const viewportRef = useRef<HTMLDivElement>(null);
++  const slotRefs = useRef<(HTMLDivElement | null)[]>([]);
++  const drag = useRef({ down: false, moved: false, x: 0, left: 0 });
++
++  const activate = useCallback((i: number) => {
++    if (drag.current.moved || drag.current.down) return;
++    if (activeRef.current === i) return;
++    activeRef.current = i;
++    setActive(i);
++    setFlipped(false);
++    setSwayTick((t) => t + 1);
++  }, []);
++
++  const flip = useCallback(() => {
++    if (drag.current.moved) return;
++    setFlipped((f) => !f);
++  }, []);
++
++  // keep the active hanger centred when the rail overflows (mobile / tablet).
++  // Computed from the known slot sizes rather than the DOM, since the slots are
++  // mid-animation when the active item changes.
++  useEffect(() => {
++    const vp = viewportRef.current;
++    if (!vp || sizes === DESKTOP) return;
++    const pad = Math.max(24, vp.clientWidth / 2 - sizes.active / 2);
++    const left =
++      pad +
++      active * (sizes.side + sizes.gap) +
++      sizes.gap / 2 +
++      sizes.active / 2;
++    vp.scrollTo({
++      left: left - vp.clientWidth / 2,
++      behavior: reduced ? "auto" : "smooth",
++    });
++  }, [active, sizes, reduced]);
++
++  // drag-to-scroll on pointer devices; native touch swipe already works
++  useEffect(() => {
++    const vp = viewportRef.current;
++    if (!vp) return;
++    const d = drag.current;
++    const onDown = (e: PointerEvent) => {
++      if (e.pointerType === "touch") return;
++      d.down = true;
++      d.moved = false;
++      d.x = e.clientX;
++      d.left = vp.scrollLeft;
++    };
++    const onMove = (e: PointerEvent) => {
++      if (!d.down) return;
++      const dx = e.clientX - d.x;
++      if (Math.abs(dx) > 6) d.moved = true;
++      if (d.moved) vp.scrollLeft = d.left - dx;
++    };
++    const onUp = () => {
++      d.down = false;
++      // let the click that follows a drag through as a no-op
++      setTimeout(() => {
++        d.moved = false;
++      }, 0);
++    };
++    vp.addEventListener("pointerdown", onDown);
++    window.addEventListener("pointermove", onMove);
++    window.addEventListener("pointerup", onUp);
++    window.addEventListener("pointercancel", onUp);
++    return () => {
++      vp.removeEventListener("pointerdown", onDown);
++      window.removeEventListener("pointermove", onMove);
++      window.removeEventListener("pointerup", onUp);
++      window.removeEventListener("pointercancel", onUp);
++    };
++  }, []);
++
++  const item = RACK[active];
++  const product = getProduct(item.slug);
++  const hookY = (sizes.active * 14) / 300;
++  const collection = product?.gender === "women" ? "/women" : "/men";
++
++  return (
++    <div>
++      {/* ——— the rail ——— */}
++      <div className="relative mx-auto max-w-7xl">
++        {/* brushed-steel bar + wall brackets */}
++        <div
++          aria-hidden
++          className="pointer-events-none absolute inset-x-2 z-10 sm:inset-x-4"
++          style={{ top: hookY - 4 }}
++        >
++          <div className="rail-bar h-[6px] w-full rounded-full" />
++          <span className="rail-bracket -left-1" />
++          <span className="rail-bracket -right-1" />
++        </div>
++
++        <div
++          ref={viewportRef}
++          className="no-scrollbar relative cursor-grab touch-pan-x overflow-x-auto overflow-y-visible select-none pb-10 pt-1 active:cursor-grabbing"
++        >
++          <div
++            className="mx-auto flex w-max items-start"
++            style={{
++              paddingInline:
++                sizes === DESKTOP
++                  ? "2.5rem"
++                  : `max(1.5rem, calc(50% - ${sizes.active / 2}px))`,
++            }}
++          >
++            {RACK.map((it, i) => (
++              <Slot
++                key={it.slug}
++                item={it}
++                index={i}
++                active={i === active}
++                flipped={flipped}
++                sizes={sizes}
++                reduced={reduced}
++                swayDir={i === active ? 0 : i < active ? -1 : 1}
++                swayTick={swayTick}
++                onActivate={activate}
++                onFlip={flip}
++                slotRef={(el) => {
++                  slotRefs.current[i] = el;
++                }}
++              />
++            ))}
++          </div>
++        </div>
++      </div>
++
++      {/* ——— active garment: title, spec, Front | Back, CTAs ——— */}
++      <div className="mx-auto flex max-w-7xl flex-col items-center px-4 text-center sm:px-6">
++        <div className="relative h-[4.5rem] w-full max-w-xl">
++          <AnimatePresence mode="wait" initial={false}>
++            {product && (
++              <motion.div
++                key={product.slug}
++                initial={reduced ? false : { opacity: 0, y: 8 }}
++                animate={{ opacity: 1, y: 0 }}
++                exit={reduced ? undefined : { opacity: 0, y: -6 }}
++                transition={{ duration: 0.3, ease: EASE_OUT }}
++                className="absolute inset-0"
++              >
++                <h2 className="display text-2xl md:text-3xl">{product.name}</h2>
++                <p className="tabular mt-1.5 text-sm text-ink-3">
++                  {item.spec} ·{" "}
++                  <span className="font-semibold text-ink">
++                    {formatINR(product.price)}
++                  </span>
++                </p>
++              </motion.div>
++            )}
++          </AnimatePresence>
++        </div>
++
++        {/* segmented Front | Back pill */}
++        <div
++          role="radiogroup"
++          aria-label="Print side"
++          className="relative mt-2 inline-flex rounded-full border border-ink/15 bg-white/60 p-1 backdrop-blur-sm"
++        >
++          {(["Front", "Back"] as const).map((side) => {
++            const on = (side === "Back") === flipped;
++            return (
++              <button
++                key={side}
++                type="button"
++                role="radio"
++                aria-checked={on}
++                onClick={() => setFlipped(side === "Back")}
++                className={`label relative z-10 rounded-full px-5 py-2 transition-colors ${
++                  on ? "text-chalk" : "text-ink-2 hover:text-ink"
++                }`}
++              >
++                {on && (
++                  <motion.span
++                    layoutId="rack-pill"
++                    transition={
++                      reduced
++                        ? { duration: 0 }
++                        : { type: "spring", stiffness: 400, damping: 32 }
++                    }
++                    className="absolute inset-0 -z-10 rounded-full bg-ink"
++                  />
++                )}
++                {side}
++                {side === "Back" && item.backPrint && (
++                  <span className="ml-1.5 text-[0.55rem] opacity-70">
++                    PRINT
++                  </span>
++                )}
++              </button>
++            );
++          })}
++        </div>
++
++        <div className="mt-6 flex items-center justify-center gap-3">
++          <button
++            type="button"
++            aria-label="Previous piece"
++            onClick={() => activate((active + RACK.length - 1) % RACK.length)}
++            className="btn btn-ghost size-11 !p-0"
++          >
++            ←
++          </button>
++          <Link href={collection} className="btn btn-ink">
++            Shop the collection
++          </Link>
++          <button
++            type="button"
++            aria-label="Next piece"
++            onClick={() => activate((active + 1) % RACK.length)}
++            className="btn btn-ghost size-11 !p-0"
++          >
++            →
++          </button>
++        </div>
++        <Link
++          href={`/product/${item.slug}`}
++          className="label mt-4 underline decoration-ink/30 underline-offset-4 hover:text-accent"
++        >
++          Quick view
++        </Link>
++        <p className="serif-note mt-5 text-sm text-ink-3">
++          Tap or hover a hanger · tap again to flip it · drag to browse
++        </p>
++      </div>
++    </div>
++  );
++}
++
++/* ———————————————————————————— editorial banner ———————————————————————————— */
++
++export function HeroEditorialBanner() {
++  const ref = useRef<HTMLDivElement>(null);
++  const reduced = useReducedMotion();
++  const { scrollYProgress } = useScroll({
++    target: ref,
++    offset: ["start end", "end start"],
++  });
++  const y = useTransform(
++    scrollYProgress,
++    [0, 1],
++    reduced ? ["0%", "0%"] : ["-12%", "12%"],
++  );
++
++  return (
++    <div
++      ref={ref}
++      className="relative min-h-[28vh] overflow-hidden bg-ink md:min-h-[34vh]"
++    >
++      <motion.div style={{ y }} className="absolute -inset-y-[14%] inset-x-0">
++        <Image
++          src={editorial.crowd}
++          alt="The Rabble crowd on a city bench, printed tees and boutique layers"
++          fill
++          priority
++          sizes="100vw"
++          className="object-cover"
++        />
++      </motion.div>
++      <div className="absolute inset-0 bg-gradient-to-r from-ink/70 via-ink/30 to-transparent" />
++      <div className="relative mx-auto flex min-h-[28vh] max-w-7xl items-end px-4 py-8 sm:px-6 md:min-h-[34vh] md:py-10">
++        <div>
++          <p className="label text-chalk/70">Studio to street</p>
++          <p className="display mt-2 max-w-xl text-2xl text-chalk md:text-4xl">
++            Front &amp; back puff prints.{" "}
++            <span className="serif-note lowercase text-butter">
++              Boutique cuts.
++            </span>{" "}
++            Small-batch runs.
++          </p>
++          <div className="mt-5 flex flex-wrap gap-3">
++            <Link href="/men" className="btn btn-chalk">
++              Printed tees
++            </Link>
++            <Link
++              href="/women"
++              className="btn btn-ghost !border-chalk/50 !text-chalk hover:!bg-chalk hover:!text-ink"
++            >
++              Women&rsquo;s boutique
++            </Link>
++          </div>
++        </div>
++      </div>
++    </div>
++  );
++}
+diff --git a/components/HangingRail.tsx b/components/HangingRail.tsx
+deleted file mode 100644
+index a0b899c..0000000
+--- a/components/HangingRail.tsx
++++ /dev/null
+@@ -1,270 +0,0 @@
+-"use client";
+-
+-import Link from "next/link";
+-import { useEffect, useRef, useState } from "react";
+-import GarmentArt, { type GarmentColors, type GarmentKind } from "./GarmentArt";
+-import { formatINR, getProduct } from "@/lib/products";
+-
+-interface RailItem {
+-  slug: string;
+-  kind: GarmentKind;
+-  colors: GarmentColors;
+-  tag?: string;
+-  tagTone?: "ink" | "accent";
+-}
+-
+-/** Drop 01 lineup — colours roughly match each product's photography. */
+-const RAIL: RailItem[] = [
+-  { slug: "static-hoodie", kind: "hoodie", colors: { body: "#aeaca5", shade: "#8f8d86" }, tag: "−20%" },
+-  { slug: "low-volume-tee", kind: "tee", colors: { body: "#24231f", shade: "#121110" } },
+-  { slug: "oat-crew", kind: "crew", colors: { body: "#ddd3bd", shade: "#c2b79d" } },
+-  {
+-    slug: "second-shift-trucker",
+-    kind: "trucker",
+-    colors: { body: "#2e3f63", shade: "#1f2c48", detail: "#b78e5a" },
+-    tag: "NEW",
+-    tagTone: "accent",
+-  },
+-  {
+-    slug: "half-day-bomber",
+-    kind: "bomber",
+-    colors: { body: "#b06c43", shade: "#8e5431" },
+-    tag: "3 LEFT",
+-  },
+-  {
+-    slug: "sunstrike-coord",
+-    kind: "cropped-hoodie",
+-    colors: { body: "#e9c05c", shade: "#caa041" },
+-    tag: "NEW",
+-    tagTone: "accent",
+-  },
+-  {
+-    slug: "reprint-tee-01",
+-    kind: "graphic-tee",
+-    colors: { body: "#e8e0cd", shade: "#cfc5ac", detail: "#2438e8" },
+-  },
+-];
+-
+-/** deterministic pseudo-random per item, for organic swing variation */
+-const vary = (i: number) => 0.85 + ((i * 97) % 30) / 100;
+-
+-export default function HangingRail() {
+-  const viewportRef = useRef<HTMLDivElement>(null);
+-  const trackRef = useRef<HTMLDivElement>(null);
+-  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+-  const [active, setActive] = useState(0);
+-  const activeRef = useRef(0);
+-
+-  useEffect(() => {
+-    const viewport = viewportRef.current;
+-    const track = trackRef.current;
+-    if (!viewport || !track) return;
+-
+-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+-
+-    let pos = 0;
+-    let v = reduced ? 0 : -2.2; // small intro drift so the physics introduce themselves
+-    let lastV = 0;
+-    let dragging = false;
+-    let lastX = 0;
+-    const angles = RAIL.map(() => 0);
+-    const omegas = RAIL.map(() => 0);
+-    let raf = 0;
+-
+-    const bounds = () => Math.min(0, viewport.clientWidth - track.scrollWidth);
+-
+-    const frame = () => {
+-      const min = bounds();
+-
+-      if (!dragging) {
+-        pos += v;
+-        v *= 0.94;
+-        // rubber-band back into range
+-        if (pos > 0) {
+-          pos += (0 - pos) * 0.12;
+-          v *= 0.6;
+-        } else if (pos < min) {
+-          pos += (min - pos) * 0.12;
+-          v *= 0.6;
+-        }
+-        if (Math.abs(v) < 0.02) v = 0;
+-      }
+-
+-      const accel = v - lastV;
+-      lastV = v;
+-
+-      track.style.transform = `translate3d(${pos}px,0,0)`;
+-
+-      if (!reduced) {
+-        for (let i = 0; i < RAIL.length; i++) {
+-          // damped pendulum driven by track acceleration (inertia)
+-          omegas[i] += -0.035 * angles[i] - 0.075 * omegas[i] + accel * 0.9 * vary(i);
+-          angles[i] += omegas[i];
+-          if (angles[i] > 16) angles[i] = 16;
+-          if (angles[i] < -16) angles[i] = -16;
+-          const el = itemRefs.current[i];
+-          if (el) el.style.transform = `rotate(${angles[i]}deg)`;
+-        }
+-      }
+-
+-      // nearest item to viewport centre
+-      const center = viewport.clientWidth / 2 - pos;
+-      let best = 0;
+-      let bestDist = Infinity;
+-      for (let i = 0; i < RAIL.length; i++) {
+-        const el = itemRefs.current[i];
+-        if (!el) continue;
+-        const mid = el.offsetLeft + el.offsetWidth / 2;
+-        const d = Math.abs(mid - center);
+-        if (d < bestDist) {
+-          bestDist = d;
+-          best = i;
+-        }
+-      }
+-      if (best !== activeRef.current) {
+-        activeRef.current = best;
+-        setActive(best);
+-      }
+-
+-      raf = requestAnimationFrame(frame);
+-    };
+-
+-    const onPointerDown = (e: PointerEvent) => {
+-      dragging = true;
+-      lastX = e.clientX;
+-      v = 0;
+-      viewport.setPointerCapture(e.pointerId);
+-    };
+-    const onPointerMove = (e: PointerEvent) => {
+-      if (!dragging) return;
+-      let dx = e.clientX - lastX;
+-      lastX = e.clientX;
+-      const min = bounds();
+-      if (pos > 0 || pos < min) dx *= 0.35; // resist beyond the ends
+-      pos += dx;
+-      v = dx;
+-    };
+-    const endDrag = () => {
+-      dragging = false;
+-    };
+-    const onWheel = (e: WheelEvent) => {
+-      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+-      e.preventDefault();
+-      v -= e.deltaX * 0.12;
+-    };
+-
+-    viewport.addEventListener("pointerdown", onPointerDown);
+-    viewport.addEventListener("pointermove", onPointerMove);
+-    viewport.addEventListener("pointerup", endDrag);
+-    viewport.addEventListener("pointercancel", endDrag);
+-    viewport.addEventListener("wheel", onWheel, { passive: false });
+-
+-    const nudgeHandler = (e: Event) => {
+-      const dir = (e as CustomEvent<number>).detail;
+-      v += dir * 14;
+-    };
+-    viewport.addEventListener("rail-nudge", nudgeHandler);
+-
+-    raf = requestAnimationFrame(frame);
+-    return () => {
+-      cancelAnimationFrame(raf);
+-      viewport.removeEventListener("pointerdown", onPointerDown);
+-      viewport.removeEventListener("pointermove", onPointerMove);
+-      viewport.removeEventListener("pointerup", endDrag);
+-      viewport.removeEventListener("pointercancel", endDrag);
+-      viewport.removeEventListener("wheel", onWheel);
+-      viewport.removeEventListener("rail-nudge", nudgeHandler);
+-    };
+-  }, []);
+-
+-  const nudge = (dir: number) => {
+-    viewportRef.current?.dispatchEvent(new CustomEvent("rail-nudge", { detail: dir }));
+-  };
+-
+-  const activeProduct = getProduct(RAIL[active].slug);
+-
+-  return (
+-    <div>
+-      {/* the rod */}
+-      <div className="relative">
+-        <div
+-          aria-hidden
+-          className="absolute inset-x-0 top-[10px] h-[5px] rounded-full"
+-          style={{
+-            background: "linear-gradient(#b9b7b0, #8f8e88 55%, #6f6e68)",
+-            boxShadow: "0 1px 2px rgb(0 0 0 / 0.18)",
+-          }}
+-        />
+-        <div
+-          ref={viewportRef}
+-          className="cursor-grab touch-pan-y select-none overflow-hidden active:cursor-grabbing"
+-        >
+-          <div ref={trackRef} className="flex w-max items-start px-[8vw] will-change-transform">
+-            {RAIL.map((item, i) => {
+-              const product = getProduct(item.slug);
+-              return (
+-                <div
+-                  key={item.slug}
+-                  ref={(el) => {
+-                    itemRefs.current[i] = el;
+-                  }}
+-                  className="w-[150px] shrink-0 origin-[50%_4%] sm:w-[185px] md:w-[210px]"
+-                >
+-                  <Link
+-                    href={`/product/${item.slug}`}
+-                    draggable={false}
+-                    aria-label={product ? `${product.name} — ${formatINR(product.price)}` : item.slug}
+-                    className="block transition-opacity hover:opacity-80"
+-                  >
+-                    <GarmentArt
+-                      kind={item.kind}
+-                      colors={item.colors}
+-                      tag={item.tag}
+-                      tagTone={item.tagTone}
+-                      className="pointer-events-none h-auto w-full"
+-                    />
+-                  </Link>
+-                </div>
+-              );
+-            })}
+-          </div>
+-        </div>
+-      </div>
+-
+-      {/* caption */}
+-      <div className="mt-6 flex flex-col items-center gap-4 text-center">
+-        <div className="relative h-12 w-full">
+-          {activeProduct && (
+-            <div key={activeProduct.slug} className="absolute inset-0" style={{ animation: "page-in 0.35s both" }}>
+-              <p className="font-semibold">{activeProduct.name}</p>
+-              <p className="tabular mt-0.5 text-sm text-ink-3">
+-                {activeProduct.color} · {formatINR(activeProduct.price)}
+-              </p>
+-            </div>
+-          )}
+-        </div>
+-        <div className="flex items-center gap-3">
+-          <button
+-            type="button"
+-            aria-label="Previous piece"
+-            onClick={() => nudge(1)}
+-            className="btn btn-ghost size-11 !p-0"
+-          >
+-            ←
+-          </button>
+-          <Link href="/new-arrivals" className="btn btn-ink">
+-            Shop the drop
+-          </Link>
+-          <button
+-            type="button"
+-            aria-label="Next piece"
+-            onClick={() => nudge(-1)}
+-            className="btn btn-ghost size-11 !p-0"
+-          >
+-            →
+-          </button>
+-        </div>
+-      </div>
+-    </div>
+-  );
+-}
+diff --git a/components/Header.tsx b/components/Header.tsx
+index 2e54815..c8a76de 100644
+--- a/components/Header.tsx
++++ b/components/Header.tsx
+@@ -3,12 +3,13 @@
+ import Link from "next/link";
+ import { usePathname } from "next/navigation";
+ import { useEffect, useState } from "react";
++import SearchOverlay from "./SearchOverlay";
+ import { useCart } from "@/lib/cart";
+ 
+ const NAV = [
+-  { href: "/men", label: "Men" },
+-  { href: "/women", label: "Women" },
+-  { href: "/new-arrivals", label: "New" },
++  { href: "/men", label: "Printed Tees" },
++  { href: "/women", label: "Women's Boutique" },
++  { href: "/new-arrivals", label: "New Drops" },
+ ];
+ 
+ export default function Header() {
+@@ -16,6 +17,7 @@ export default function Header() {
+   const { count, openDrawer } = useCart();
+   const [scrolled, setScrolled] = useState(false);
+   const [menuOpen, setMenuOpen] = useState(false);
++  const [searchOpen, setSearchOpen] = useState(false);
+ 
+   useEffect(() => {
+     const onScroll = () => setScrolled(window.scrollY > 8);
+@@ -31,61 +33,127 @@ export default function Header() {
+     };
+   }, [menuOpen]);
+ 
++  // ⌘K / Ctrl+K opens search
++  useEffect(() => {
++    const onKey = (e: KeyboardEvent) => {
++      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
++        e.preventDefault();
++        setSearchOpen((v) => !v);
++      }
++    };
++    window.addEventListener("keydown", onKey);
++    return () => window.removeEventListener("keydown", onKey);
++  }, []);
++
+   const linkCls = (href: string) =>
+     `label transition-colors hover:text-accent ${
+       pathname.startsWith(href) ? "text-accent" : "text-ink"
+     }`;
+ 
+-  return (
+-    <header
+-      className={`sticky top-0 z-40 bg-chalk/90 backdrop-blur-sm transition-shadow ${
+-        scrolled ? "border-b hairline" : ""
+-      }`}
+-    >
+-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+-        {/* left: nav (desktop) / burger (mobile) */}
+-        <nav aria-label="Primary" className="hidden flex-1 items-center gap-7 md:flex">
+-          {NAV.map((item) => (
+-            <Link key={item.href} href={item.href} className={linkCls(item.href)}>
+-              {item.label}
+-            </Link>
+-          ))}
+-        </nav>
+-        <button
+-          type="button"
+-          className="flex-1 text-left md:hidden"
+-          aria-expanded={menuOpen}
+-          aria-controls="mobile-menu"
+-          onClick={() => setMenuOpen((v) => !v)}
+-        >
+-          <span className="label">{menuOpen ? "Close" : "Menu"}</span>
+-        </button>
++  const isHome = pathname === "/";
+ 
+-        {/* center: wordmark */}
+-        <Link href="/" aria-label="RABBLE home" className="display text-[1.35rem] leading-none">
+-          Rabble<span className="text-accent">.</span>
+-        </Link>
++  return (
++    <>
++      <header
++        className={`glass sticky top-0 z-40 transition-shadow ${
++          scrolled
++            ? "border-b border-ink/10 shadow-[0_1px_0_rgb(255_255_255/0.6)_inset]"
++            : ""
++        }`}
++      >
++        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
++          {/* left: nav (desktop) / burger (mobile) */}
++          <nav
++            aria-label="Primary"
++            className="hidden flex-1 items-center gap-7 md:flex"
++          >
++            {NAV.map((item) => (
++              <Link
++                key={item.href}
++                href={item.href}
++                className={linkCls(item.href)}
++              >
++                {item.label}
++              </Link>
++            ))}
++          </nav>
++          <button
++            type="button"
++            className="flex-1 text-left md:hidden"
++            aria-expanded={menuOpen}
++            aria-controls="mobile-menu"
++            onClick={() => setMenuOpen((v) => !v)}
++          >
++            <span className="label">{menuOpen ? "Close" : "Menu"}</span>
++          </button>
+ 
+-        {/* right */}
+-        <div className="flex flex-1 items-center justify-end gap-7">
+-          <Link href="/about" className={`hidden md:inline ${linkCls("/about")}`}>
+-            About
++          {/* center: wordmark */}
++          <Link
++            href="/"
++            aria-label="RABBLE home"
++            className="display text-[1.4rem] leading-none"
++          >
++            Rabble<span className="text-accent">.</span>
+           </Link>
+-          <button type="button" onClick={openDrawer} className="label hover:text-accent">
+-            Bag
+-            <span className="tabular ml-1 inline-flex min-w-[1.3em] items-center justify-center rounded-full bg-ink px-1.5 py-0.5 text-[0.6rem] leading-none text-chalk">
+-              {count}
+-            </span>
+-          </button>
++
++          {/* right */}
++          <div className="flex flex-1 items-center justify-end gap-6">
++            <button
++              type="button"
++              onClick={() => setSearchOpen(true)}
++              className="label flex items-center gap-1.5 hover:text-accent"
++              aria-label="Search the store"
++            >
++              <svg
++                width="14"
++                height="14"
++                viewBox="0 0 24 24"
++                fill="none"
++                stroke="currentColor"
++                strokeWidth="2.2"
++                aria-hidden
++              >
++                <circle cx="11" cy="11" r="7" />
++                <path d="m20 20-3.5-3.5" strokeLinecap="round" />
++              </svg>
++              <span className="hidden sm:inline">Search</span>
++            </button>
++            <button
++              type="button"
++              onClick={openDrawer}
++              className="label hover:text-accent"
++            >
++              Bag
++              <span className="tabular ml-1">({count})</span>
++            </button>
++          </div>
+         </div>
+-      </div>
+ 
+-      {/* mobile menu */}
+-      {menuOpen && (
+-        <div id="mobile-menu" className="border-t hairline bg-chalk md:hidden">
+-          <nav aria-label="Mobile" className="flex flex-col px-4 py-6">
+-            {[...NAV, { href: "/about", label: "About" }, { href: "/bag", label: "Bag" }].map(
+-              (item, i) => (
++        {/* micro-header */}
++        {isHome && !menuOpen && (
++          <div className="border-t border-ink/10">
++            <p className="mx-auto max-w-7xl px-4 py-2 text-center text-[0.65rem] uppercase tracking-[0.2em] text-ink-2 sm:px-6 sm:text-xs">
++              New collection
++              <span className="mx-3 text-ink/30" aria-hidden>
++                |
++              </span>
++              Premium printed tees &amp; boutique wear
++            </p>
++          </div>
++        )}
++
++        {/* mobile menu */}
++        {menuOpen && (
++          <div
++            id="mobile-menu"
++            className="border-t hairline bg-studio md:hidden"
++          >
++            <nav aria-label="Mobile" className="flex flex-col px-4 py-6">
++              {[
++                ...NAV,
++                { href: "/about", label: "About" },
++                { href: "/bag", label: "Bag" },
++              ].map((item, i) => (
+                 <Link
+                   key={item.href}
+                   href={item.href}
+@@ -95,12 +163,14 @@ export default function Header() {
+                 >
+                   {item.label}
+                 </Link>
+-              ),
+-            )}
+-            <p className="serif-note pt-6 text-ink-3">Join the noise.</p>
+-          </nav>
+-        </div>
+-      )}
+-    </header>
++              ))}
++              <p className="serif-note pt-6 text-ink-3">Join the noise.</p>
++            </nav>
++          </div>
++        )}
++      </header>
++
++      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
++    </>
+   );
+ }
+diff --git a/components/Marquee.tsx b/components/Marquee.tsx
+index df0d070..42a5033 100644
+--- a/components/Marquee.tsx
++++ b/components/Marquee.tsx
+@@ -6,18 +6,26 @@ interface MarqueeProps {
+ /** Infinite ticker. Content duplicated once; the track animates -50%. */
+ export default function Marquee({ items, className = "" }: MarqueeProps) {
+   const row = (ariaHidden: boolean) => (
+-    <span aria-hidden={ariaHidden || undefined} className="flex shrink-0 items-center">
++    <span
++      aria-hidden={ariaHidden || undefined}
++      className="flex shrink-0 items-center"
++    >
+       {items.map((item, i) => (
+-        <span key={i} className="label flex items-center whitespace-nowrap px-6 py-3">
++        <span
++          key={i}
++          className="flex items-center whitespace-nowrap px-6 py-2.5 text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-ink-2"
++        >
+           {item}
+-          <span className="ml-12 inline-block size-1.5 rounded-full bg-current opacity-40" />
++          <span className="ml-12 inline-block size-1 rounded-full bg-accent" />
+         </span>
+       ))}
+     </span>
+   );
+ 
+   return (
+-    <div className={`overflow-hidden border-y hairline ${className}`}>
++    <div
++      className={`overflow-hidden border-y border-neutral-200/80 bg-studio ${className}`}
++    >
+       <div className="marquee-track flex w-max">
+         {row(false)}
+         {row(true)}
+diff --git a/components/ProductCard.tsx b/components/ProductCard.tsx
+index 4bf4195..6e75b34 100644
+--- a/components/ProductCard.tsx
++++ b/components/ProductCard.tsx
+@@ -1,13 +1,19 @@
++"use client";
++
+ import Image from "next/image";
+ import Link from "next/link";
++import { useState } from "react";
++import { useCart } from "@/lib/cart";
+ import { formatINR, type Product } from "@/lib/products";
+ 
+ const BADGE_LABEL: Record<string, string> = {
+-  new: "New",
++  new: "New drop",
+   "low-stock": "Low stock",
+   sale: "−20%",
+ };
+ 
++const QUICK_SIZES = ["S", "M", "L", "XL"];
++
+ interface ProductCardProps {
+   product: Product;
+   /** marks the LCP candidates on collection pages */
+@@ -15,54 +21,156 @@ interface ProductCardProps {
+   sizes?: string;
+ }
+ 
++/**
++ * Product card with a Front | Back flip (auto-flips on hover, pill toggle for
++ * touch) and a slide-up quick-add size bar.
++ */
+ export default function ProductCard({
+   product,
+   priority = false,
+   sizes = "(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw",
+ }: ProductCardProps) {
++  const { add } = useCart();
+   const [front, back] = product.images;
++  const hasBack = Boolean(back);
++  // null = follow hover; "front" / "back" = pinned by the pill
++  const [pinned, setPinned] = useState<"front" | "back" | null>(null);
++  const [added, setAdded] = useState<string | null>(null);
++
++  const quickSizes = product.sizes.filter((s) => QUICK_SIZES.includes(s));
++  const oneSize = product.sizes.length === 1;
++
++  const quickAdd = (size: string) => {
++    add(product.slug, size, 1);
++    setAdded(size);
++    setTimeout(() => setAdded(null), 1400);
++  };
++
++  const cardCls = `flip-card ${pinned === "back" ? "is-back" : ""} ${pinned === "front" || !hasBack ? "is-front" : ""}`;
++
+   return (
+-    <Link href={`/product/${product.slug}`} className="img-hover group block">
+-      <div className="img-frame relative aspect-[4/5]">
+-        <Image
+-          src={front}
+-          alt={`${product.name} in ${product.color}`}
+-          fill
+-          priority={priority}
+-          sizes={sizes}
+-          className="object-cover"
+-        />
+-        {back && (
+-          <Image
+-            src={back}
+-            alt=""
+-            fill
+-            sizes={sizes}
+-            className="object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+-          />
+-        )}
+-        {product.badge && (
+-          <span
+-            className={`hang-tag absolute left-3 top-3 ${
+-              product.badge === "new" ? "hang-tag--accent" : ""
+-            }`}
++    <div className="group">
++      <div className="img-frame flip-scene relative aspect-[4/5]">
++        <Link
++          href={`/product/${product.slug}`}
++          className="absolute inset-0 block"
++          aria-label={`${product.name} in ${product.color}`}
++        >
++          <div className={cardCls}>
++            <div className="flip-face">
++              <Image
++                src={front}
++                alt={`${product.name} in ${product.color}, front`}
++                fill
++                priority={priority}
++                sizes={sizes}
++                className="object-cover"
++              />
++            </div>
++            {hasBack && (
++              <div className="flip-face flip-face--back">
++                <Image
++                  src={back}
++                  alt={`${product.name}, back`}
++                  fill
++                  sizes={sizes}
++                  className="object-cover"
++                />
++              </div>
++            )}
++          </div>
++
++          {product.badge && (
++            <span
++              className={`hang-tag absolute left-3 top-3 z-10 ${
++                product.badge === "new" ? "hang-tag--accent" : ""
++              }`}
++            >
++              {product.stockNote ?? BADGE_LABEL[product.badge]}
++            </span>
++          )}
++        </Link>
++
++        {/* Front | Back pill */}
++        {hasBack && (
++          <div
++            role="radiogroup"
++            aria-label="View side"
++            className="absolute right-3 top-3 z-10 inline-flex rounded-full border border-white/40 bg-ink/70 p-0.5 text-chalk backdrop-blur-sm"
+           >
+-            {product.stockNote ?? BADGE_LABEL[product.badge]}
+-          </span>
++            {(["front", "back"] as const).map((side) => {
++              const on = pinned === side;
++              return (
++                <button
++                  key={side}
++                  type="button"
++                  role="radio"
++                  aria-checked={on}
++                  onClick={() => setPinned((p) => (p === side ? null : side))}
++                  className={`rounded-full px-2.5 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.14em] transition-colors ${
++                    on ? "bg-chalk text-ink" : "text-chalk/80 hover:text-chalk"
++                  }`}
++                >
++                  {side}
++                </button>
++              );
++            })}
++          </div>
+         )}
++
++        {/* quick-add size bar */}
++        <div className="pointer-events-none absolute inset-x-0 bottom-2 z-10 px-2 opacity-0 translate-y-2 transition-all duration-300 ease-out group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100">
++          <div className="flex items-center gap-1 rounded-full bg-studio/95 p-1 shadow-lg backdrop-blur-sm">
++            <span className="label pl-3 pr-1 text-[0.55rem] text-ink-3">
++              {added ? "Added" : "Quick add"}
++            </span>
++            {oneSize ? (
++              <button
++                type="button"
++                onClick={() => quickAdd(product.sizes[0])}
++                className="tabular ml-auto flex-1 rounded-full bg-ink px-3 py-1.5 text-[0.65rem] font-semibold text-chalk hover:bg-accent"
++              >
++                {added ? "✓" : "One size"}
++              </button>
++            ) : (
++              <div className="ml-auto flex gap-1">
++                {quickSizes.map((s) => (
++                  <button
++                    key={s}
++                    type="button"
++                    aria-label={`Quick add size ${s}`}
++                    onClick={() => quickAdd(s)}
++                    className={`tabular size-7 rounded-full text-[0.65rem] font-semibold transition-colors ${
++                      added === s
++                        ? "bg-accent text-chalk"
++                        : "hover:bg-ink hover:text-chalk"
++                    }`}
++                  >
++                    {added === s ? "✓" : s}
++                  </button>
++                ))}
++              </div>
++            )}
++          </div>
++        </div>
+       </div>
+-      <div className="mt-3 flex items-baseline justify-between gap-3">
+-        <h3 className="text-sm font-semibold leading-snug group-hover:text-accent">
+-          {product.name}
+-        </h3>
+-        <p className="tabular shrink-0 text-sm">
+-          {product.compareAt && (
+-            <span className="mr-1.5 text-ink-3 line-through">{formatINR(product.compareAt)}</span>
+-          )}
+-          {formatINR(product.price)}
+-        </p>
+-      </div>
+-      <p className="mt-0.5 text-xs text-ink-3">{product.color}</p>
+-    </Link>
++
++      <Link href={`/product/${product.slug}`} className="block" tabIndex={-1}>
++        <div className="mt-3 flex items-baseline justify-between gap-3">
++          <h3 className="text-sm font-semibold leading-snug group-hover:text-accent">
++            {product.name}
++          </h3>
++          <p className="tabular shrink-0 text-sm">
++            {product.compareAt && (
++              <span className="mr-1.5 text-ink-3 line-through">
++                {formatINR(product.compareAt)}
++              </span>
++            )}
++            {formatINR(product.price)}
++          </p>
++        </div>
++        <p className="mt-0.5 text-xs text-ink-3">{product.color}</p>
++      </Link>
++    </div>
+   );
+ }
+diff --git a/components/SearchOverlay.tsx b/components/SearchOverlay.tsx
+new file mode 100644
+index 0000000..a23a74b
+--- /dev/null
++++ b/components/SearchOverlay.tsx
+@@ -0,0 +1,151 @@
++"use client";
++
++import Image from "next/image";
++import Link from "next/link";
++import { useEffect, useMemo, useRef, useState } from "react";
++import { formatINR, products } from "@/lib/products";
++
++interface SearchOverlayProps {
++  open: boolean;
++  onClose: () => void;
++}
++
++const QUICK = ["Printed tees", "Co-ords", "Hoodies", "Dresses", "Caps"];
++
++export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
++  const [q, setQ] = useState("");
++  const inputRef = useRef<HTMLInputElement>(null);
++
++  useEffect(() => {
++    if (!open) return;
++    // eslint-disable-next-line react-hooks/set-state-in-effect
++    setQ("");
++    const t = setTimeout(() => inputRef.current?.focus(), 30);
++    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
++    window.addEventListener("keydown", onKey);
++    document.documentElement.style.overflow = "hidden";
++    return () => {
++      clearTimeout(t);
++      window.removeEventListener("keydown", onKey);
++      document.documentElement.style.overflow = "";
++    };
++  }, [open, onClose]);
++
++  const results = useMemo(() => {
++    const term = q.trim().toLowerCase();
++    if (!term) return [];
++    return products
++      .filter((p) =>
++        [p.name, p.color, p.category, p.gender, p.description]
++          .join(" ")
++          .toLowerCase()
++          .includes(term),
++      )
++      .slice(0, 6);
++  }, [q]);
++
++  if (!open) return null;
++
++  return (
++    <div className="fixed inset-0 z-50">
++      <button
++        type="button"
++        aria-label="Close search"
++        onClick={onClose}
++        className="absolute inset-0 bg-ink/40"
++        style={{ animation: "page-in 0.2s both" }}
++      />
++      <div
++        role="dialog"
++        aria-modal="true"
++        aria-label="Search"
++        className="relative mx-auto mt-[8vh] w-[min(92vw,40rem)] overflow-hidden rounded-md bg-studio shadow-2xl"
++        style={{ animation: "page-in 0.3s both" }}
++      >
++        <div className="flex items-center gap-3 border-b hairline px-5">
++          <svg
++            width="16"
++            height="16"
++            viewBox="0 0 24 24"
++            fill="none"
++            stroke="currentColor"
++            strokeWidth="2.2"
++            aria-hidden
++            className="text-ink-3"
++          >
++            <circle cx="11" cy="11" r="7" />
++            <path d="m20 20-3.5-3.5" strokeLinecap="round" />
++          </svg>
++          <input
++            ref={inputRef}
++            value={q}
++            onChange={(e) => setQ(e.target.value)}
++            placeholder="Search tees, co-ords, dresses…"
++            className="h-14 flex-1 bg-transparent text-base outline-none placeholder:text-ink-3"
++          />
++          <button
++            type="button"
++            onClick={onClose}
++            className="label text-ink-3 hover:text-accent"
++          >
++            Esc
++          </button>
++        </div>
++
++        {q.trim() === "" ? (
++          <div className="px-5 py-5">
++            <p className="label text-ink-3">Popular</p>
++            <div className="mt-3 flex flex-wrap gap-2">
++              {QUICK.map((t) => (
++                <button
++                  key={t}
++                  type="button"
++                  onClick={() => setQ(t)}
++                  className="rounded-full border hairline px-3.5 py-1.5 text-xs hover:border-ink"
++                >
++                  {t}
++                </button>
++              ))}
++            </div>
++          </div>
++        ) : results.length === 0 ? (
++          <p className="serif-note px-5 py-8 text-center text-ink-3">
++            Nothing by that name — yet. Try &ldquo;tee&rdquo; or
++            &ldquo;dress&rdquo;.
++          </p>
++        ) : (
++          <ul className="max-h-[60vh] overflow-y-auto py-2">
++            {results.map((p) => (
++              <li key={p.slug}>
++                <Link
++                  href={`/product/${p.slug}`}
++                  onClick={onClose}
++                  className="flex items-center gap-4 px-5 py-2.5 hover:bg-studio-2"
++                >
++                  <span className="img-frame relative size-12 shrink-0">
++                    <Image
++                      src={p.images[0]}
++                      alt=""
++                      fill
++                      sizes="48px"
++                      className="object-cover"
++                    />
++                  </span>
++                  <span className="min-w-0 flex-1">
++                    <span className="block text-sm font-semibold">
++                      {p.name}
++                    </span>
++                    <span className="block text-xs text-ink-3">
++                      {p.color} · {p.category}
++                    </span>
++                  </span>
++                  <span className="tabular text-sm">{formatINR(p.price)}</span>
++                </Link>
++              </li>
++            ))}
++          </ul>
++        )}
++      </div>
++    </div>
++  );
++}
+diff --git a/components/TrustStrip.tsx b/components/TrustStrip.tsx
+new file mode 100644
+index 0000000..9699e31
+--- /dev/null
++++ b/components/TrustStrip.tsx
+@@ -0,0 +1,103 @@
++import Reveal from "./Reveal";
++
++const POINTS = [
++  {
++    title: "Heavyweight 240 GSM Cotton",
++    body: "Combed, pre-shrunk jersey with a collar that holds its shape past wash fifty.",
++    icon: (
++      <svg
++        viewBox="0 0 24 24"
++        fill="none"
++        stroke="currentColor"
++        strokeWidth="1.6"
++        aria-hidden
++      >
++        <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />
++      </svg>
++    ),
++  },
++  {
++    title: "Zero-Crack Front & Back Prints",
++    body: "Puff ink and high-density screen prints that age gracefully, never flake.",
++    icon: (
++      <svg
++        viewBox="0 0 24 24"
++        fill="none"
++        stroke="currentColor"
++        strokeWidth="1.6"
++        aria-hidden
++      >
++        <rect x="5" y="4" width="14" height="16" rx="1.5" />
++        <path d="M9 9h6M9 13h6" strokeLinecap="round" />
++      </svg>
++    ),
++  },
++  {
++    title: "Boutique-Grade Tailoring",
++    body: "Hand-finished seams and small-batch cuts for the women's atelier edit.",
++    icon: (
++      <svg
++        viewBox="0 0 24 24"
++        fill="none"
++        stroke="currentColor"
++        strokeWidth="1.6"
++        aria-hidden
++      >
++        <circle cx="7" cy="17" r="3" />
++        <circle cx="17" cy="17" r="3" />
++        <path d="M9 15 18 4M15 15 6 4" strokeLinecap="round" />
++      </svg>
++    ),
++  },
++  {
++    title: "UPI, COD & 7-Day Easy Exchanges",
++    body: "Pay how you like, ship pan-India, swap sizes without an interrogation.",
++    icon: (
++      <svg
++        viewBox="0 0 24 24"
++        fill="none"
++        stroke="currentColor"
++        strokeWidth="1.6"
++        aria-hidden
++      >
++        <path
++          d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"
++          strokeLinecap="round"
++        />
++        <path
++          d="M18 3v4h-4M6 21v-4h4"
++          strokeLinecap="round"
++          strokeLinejoin="round"
++        />
++      </svg>
++    ),
++  },
++];
++
++/** Craftsmanship & Indian D2C trust strip — a clean 4-column architectural grid. */
++export default function TrustStrip() {
++  return (
++    <section
++      className="border-y border-neutral-200/80 bg-studio"
++      aria-label="Why Rabble"
++    >
++      <div className="mx-auto grid max-w-7xl grid-cols-1 gap-px bg-neutral-200/80 sm:grid-cols-2 md:grid-cols-4">
++        {POINTS.map((p, i) => (
++          <Reveal
++            key={p.title}
++            delay={i * 70}
++            className="bg-studio px-5 py-8 sm:px-6 md:py-10"
++          >
++            <span className="flex size-9 items-center justify-center rounded-full border border-ink/15 text-ink [&>svg]:size-4">
++              {p.icon}
++            </span>
++            <h3 className="mt-5 text-sm font-semibold leading-snug">
++              {p.title}
++            </h3>
++            <p className="mt-2 text-xs leading-relaxed text-ink-3">{p.body}</p>
++          </Reveal>
++        ))}
++      </div>
++    </section>
++  );
++}
+diff --git a/lib/rack.ts b/lib/rack.ts
+new file mode 100644
+index 0000000..8a9d51d
+--- /dev/null
++++ b/lib/rack.ts
+@@ -0,0 +1,110 @@
++import type { GarmentKind, PrintId } from "@/components/GarmentCutout";
++
++/**
++ * The hero rack lineup. Seven pieces — printed tees first, boutique pieces
++ * in the middle, heavyweights at the ends — roughly colour-matched to the
++ * product photography in `lib/products.ts`.
++ */
++export interface RackItem {
++  slug: string;
++  kind: GarmentKind;
++  /** base fabric colour */
++  body: string;
++  /** darker tone used for ribs, seams and fold shading */
++  shade: string;
++  /** print / trim colour */
++  ink?: string;
++  frontPrint?: PrintId;
++  backPrint?: PrintId;
++  /** neck-tag copy, e.g. "ONLY 3 LEFT" */
++  tag?: string;
++  tagTone?: "ink" | "accent" | "cobalt";
++  /** short fit + fabric line shown under the active garment */
++  spec: string;
++  /** optional real cutout photography (transparent PNG / WebP) */
++  frontImage?: string;
++  backImage?: string;
++  sidePreview?: string;
++}
++
++export const RACK: RackItem[] = [
++  {
++    slug: "static-hoodie",
++    kind: "hoodie",
++    body: "#b4b2ab",
++    shade: "#8f8d86",
++    ink: "#1b1a16",
++    backPrint: "arc-back",
++    tag: "-20%",
++    tagTone: "ink",
++    spec: "Relaxed Fit · 450 GSM Brushed Fleece",
++  },
++  {
++    slug: "low-volume-tee",
++    kind: "tee",
++    body: "#24231f",
++    shade: "#121110",
++    ink: "#f2efe8",
++    frontPrint: "mark-chest",
++    backPrint: "wave-back",
++    tag: "240 GSM",
++    tagTone: "ink",
++    spec: "Boxy Fit · 240 GSM Combed Cotton",
++  },
++  {
++    slug: "reprint-tee-01",
++    kind: "tee",
++    body: "#ebe4d2",
++    shade: "#cfc5ac",
++    ink: "#2438e8",
++    frontPrint: "reprint-chest",
++    backPrint: "reprint-back",
++    tag: "NEW",
++    tagTone: "cobalt",
++    spec: "Oversized Fit · 240 GSM Combed Cotton",
++  },
++  {
++    slug: "sunstrike-coord",
++    kind: "cropped-hoodie",
++    body: "#e9c05c",
++    shade: "#c99f3f",
++    ink: "#1b1a16",
++    frontPrint: "mark-chest",
++    tag: "NEW",
++    tagTone: "accent",
++    spec: "Cropped Co-ord · 380 GSM French Terry",
++  },
++  {
++    slug: "open-invite-dress",
++    kind: "dress",
++    body: "#f4f1ea",
++    shade: "#d9d3c4",
++    ink: "#1b1a16",
++    tag: "BOUTIQUE",
++    tagTone: "accent",
++    spec: "Relaxed A-line · 100% Cotton Poplin",
++  },
++  {
++    slug: "low-volume-tee-chalk",
++    kind: "tee",
++    body: "#f1ede3",
++    shade: "#d6d0c0",
++    ink: "#6e2a35",
++    frontPrint: "mark-chest",
++    backPrint: "crowd-back",
++    tag: "ONLY 3 LEFT",
++    tagTone: "accent",
++    spec: "Boxy Fit · 240 GSM Combed Cotton",
++  },
++  {
++    slug: "oat-crew",
++    kind: "crew",
++    body: "#ddd3bd",
++    shade: "#c0b59a",
++    ink: "#1b1a16",
++    backPrint: "arc-back",
++    tag: "SMALL BATCH",
++    tagTone: "ink",
++    spec: "Relaxed Fit · 400 GSM Loopback Terry",
++  },
++];
+diff --git a/package-lock.json b/package-lock.json
+index 579418f..9131e85 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -8,6 +8,7 @@
+       "name": "rabble",
+       "version": "0.1.0",
+       "dependencies": {
++        "framer-motion": "^14.14.0",
+         "next": "16.4.6",
+         "react": "19.3.0",
+         "react-dom": "19.3.0"
+@@ -608,9 +609,6 @@
+       "cpu": [
+         "arm"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "LGPL-3.0-or-later",
+       "optional": true,
+       "os": [
+@@ -627,9 +625,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "LGPL-3.0-or-later",
+       "optional": true,
+       "os": [
+@@ -646,9 +641,6 @@
+       "cpu": [
+         "ppc64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "LGPL-3.0-or-later",
+       "optional": true,
+       "os": [
+@@ -665,9 +657,6 @@
+       "cpu": [
+         "riscv64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "LGPL-3.0-or-later",
+       "optional": true,
+       "os": [
+@@ -684,9 +673,6 @@
+       "cpu": [
+         "s390x"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "LGPL-3.0-or-later",
+       "optional": true,
+       "os": [
+@@ -703,9 +689,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "LGPL-3.0-or-later",
+       "optional": true,
+       "os": [
+@@ -722,9 +705,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "LGPL-3.0-or-later",
+       "optional": true,
+       "os": [
+@@ -741,9 +721,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "LGPL-3.0-or-later",
+       "optional": true,
+       "os": [
+@@ -760,9 +737,6 @@
+       "cpu": [
+         "arm"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "Apache-2.0",
+       "optional": true,
+       "os": [
+@@ -785,9 +759,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "Apache-2.0",
+       "optional": true,
+       "os": [
+@@ -810,9 +781,6 @@
+       "cpu": [
+         "ppc64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "Apache-2.0",
+       "optional": true,
+       "os": [
+@@ -835,9 +803,6 @@
+       "cpu": [
+         "riscv64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "Apache-2.0",
+       "optional": true,
+       "os": [
+@@ -860,9 +825,6 @@
+       "cpu": [
+         "s390x"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "Apache-2.0",
+       "optional": true,
+       "os": [
+@@ -885,9 +847,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "Apache-2.0",
+       "optional": true,
+       "os": [
+@@ -910,9 +869,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "Apache-2.0",
+       "optional": true,
+       "os": [
+@@ -935,9 +891,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "Apache-2.0",
+       "optional": true,
+       "os": [
+@@ -1190,9 +1143,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1209,9 +1159,6 @@
+       "cpu": [
+         "arm64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1228,9 +1175,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1247,9 +1191,6 @@
+       "cpu": [
+         "x64"
+       ],
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1488,9 +1429,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1508,9 +1446,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1528,9 +1463,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -1548,9 +1480,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2096,9 +2025,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2113,9 +2039,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2130,9 +2053,6 @@
+         "loong64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2147,9 +2067,6 @@
+         "loong64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2164,9 +2081,6 @@
+         "ppc64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2181,9 +2095,6 @@
+         "riscv64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2198,9 +2109,6 @@
+         "riscv64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2215,9 +2123,6 @@
+         "s390x"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2232,9 +2137,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2249,9 +2151,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -3794,6 +3693,33 @@
+         "url": "https://github.com/sponsors/ljharb"
+       }
+     },
++    "node_modules/framer-motion": {
++      "version": "14.14.0",
++      "resolved": "https://registry.npmjs.org/framer-motion/-/framer-motion-14.14.0.tgz",
++      "integrity": "sha512-fidRX0VzkZdA9OovFiBSzJtt9/jLcJpna78Z+KCqQQZIWoIpN3tOhEXAhhAw/FObUUh+o3Y18yx1F4BP0mVJ8Q==",
++      "license": "MIT",
++      "dependencies": {
++        "motion-dom": "14.14.0",
++        "motion-utils": "14.7.0",
++        "tslib": "^2.4.0"
++      },
++      "peerDependencies": {
++        "react": "^18.0.0 || ^19.0.0",
++        "react-dom": "^18.0.0 || ^19.0.0",
++        "remix": "^3.1.0"
++      },
++      "peerDependenciesMeta": {
++        "react": {
++          "optional": true
++        },
++        "react-dom": {
++          "optional": true
++        },
++        "remix": {
++          "optional": true
++        }
++      }
++    },
+     "node_modules/function-bind": {
+       "version": "1.1.2",
+       "resolved": "https://registry.npmjs.org/function-bind/-/function-bind-1.1.2.tgz",
+@@ -4907,9 +4833,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -4931,9 +4854,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -4955,9 +4875,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -4979,9 +4896,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MPL-2.0",
+       "optional": true,
+       "os": [
+@@ -5150,6 +5064,21 @@
+         "url": "https://github.com/sponsors/ljharb"
+       }
+     },
++    "node_modules/motion-dom": {
++      "version": "14.14.0",
++      "resolved": "https://registry.npmjs.org/motion-dom/-/motion-dom-14.14.0.tgz",
++      "integrity": "sha512-IAxcKhYkuQA2W0Tlx1AvVgImfqEoF3/t3IovbPQJlYkefmGsmrXjn967lMII5VmFmLpQEab4+ZkHo/ijJ4Esig==",
++      "license": "MIT",
++      "dependencies": {
++        "motion-utils": "14.7.0"
++      }
++    },
++    "node_modules/motion-utils": {
++      "version": "14.7.0",
++      "resolved": "https://registry.npmjs.org/motion-utils/-/motion-utils-14.7.0.tgz",
++      "integrity": "sha512-woO0/Nb7ys75f94fjvQi/6leiHGvZUYkeHUPEZ3vxsV+9OpEVhkxp01x8MlRwX0zt31EqgXsKDAoBoJLC148Tw==",
++      "license": "MIT"
++    },
+     "node_modules/ms": {
+       "version": "2.1.3",
+       "resolved": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+diff --git a/package.json b/package.json
+index 1fd050e..1848797 100644
+--- a/package.json
++++ b/package.json
+@@ -9,6 +9,7 @@
+     "lint": "eslint"
+   },
+   "dependencies": {
++    "framer-motion": "^14.14.0",
+     "next": "16.4.6",
+     "react": "19.3.0",
+     "react-dom": "19.3.0"
+-- 
+2.43.0
+
