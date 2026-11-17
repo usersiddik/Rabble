@@ -32,8 +32,8 @@ export default function Header() {
   }, [menuOpen]);
 
   const linkCls = (href: string) =>
-    `label transition-colors hover:text-cobalt ${
-      pathname.startsWith(href) ? "text-cobalt" : "text-ink"
+    `label transition-colors hover:text-accent ${
+      pathname.startsWith(href) ? "text-accent" : "text-ink"
     }`;
 
   return (
@@ -63,7 +63,7 @@ export default function Header() {
 
         {/* center: wordmark */}
         <Link href="/" aria-label="RABBLE home" className="display text-[1.35rem] leading-none">
-          Rabble<span className="text-cobalt">.</span>
+          Rabble<span className="text-accent">.</span>
         </Link>
 
         {/* right */}
@@ -71,7 +71,7 @@ export default function Header() {
           <Link href="/about" className={`hidden md:inline ${linkCls("/about")}`}>
             About
           </Link>
-          <button type="button" onClick={openDrawer} className="label hover:text-cobalt">
+          <button type="button" onClick={openDrawer} className="label hover:text-accent">
             Bag
             <span className="tabular ml-1 inline-flex min-w-[1.3em] items-center justify-center rounded-full bg-ink px-1.5 py-0.5 text-[0.6rem] leading-none text-chalk">
               {count}

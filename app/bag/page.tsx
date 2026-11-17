@@ -61,7 +61,7 @@ export default function BagPage() {
                 <div className="flex items-baseline justify-between gap-3">
                   <Link
                     href={`/product/${line.slug}`}
-                    className="font-semibold hover:text-cobalt sm:text-lg"
+                    className="font-semibold hover:text-accent sm:text-lg"
                   >
                     {line.product.name}
                   </Link>
@@ -81,7 +81,7 @@ export default function BagPage() {
                       type="button"
                       aria-label="Decrease quantity"
                       onClick={() => setQty(line.slug, line.size, line.qty - 1)}
-                      className="px-4 py-2 hover:text-cobalt"
+                      className="px-4 py-2 hover:text-accent"
                     >
                       −
                     </button>
@@ -90,7 +90,7 @@ export default function BagPage() {
                       type="button"
                       aria-label="Increase quantity"
                       onClick={() => setQty(line.slug, line.size, line.qty + 1)}
-                      className="px-4 py-2 hover:text-cobalt"
+                      className="px-4 py-2 hover:text-accent"
                     >
                       +
                     </button>
@@ -98,7 +98,7 @@ export default function BagPage() {
                   <button
                     type="button"
                     onClick={() => remove(line.slug, line.size)}
-                    className="text-sm text-ink-3 underline underline-offset-2 hover:text-cobalt"
+                    className="text-sm text-ink-3 underline underline-offset-2 hover:text-accent"
                   >
                     Remove
                   </button>

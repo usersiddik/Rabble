@@ -47,7 +47,7 @@ export default function BagDrawer() {
         <style>{`@keyframes drawer-in{from{transform:translateX(100%)}to{transform:none}}`}</style>
         <div className="flex items-center justify-between border-b hairline px-6 py-5">
           <h2 className="display text-xl">Your bag</h2>
-          <button type="button" onClick={closeDrawer} className="label hover:text-cobalt">
+          <button type="button" onClick={closeDrawer} className="label hover:text-accent">
             Close
           </button>
         </div>
@@ -83,7 +83,7 @@ export default function BagDrawer() {
                       <Link
                         href={`/product/${line.slug}`}
                         onClick={closeDrawer}
-                        className="font-semibold hover:text-cobalt"
+                        className="font-semibold hover:text-accent"
                       >
                         {line.product.name}
                       </Link>
@@ -99,7 +99,7 @@ export default function BagDrawer() {
                         <button
                           type="button"
                           aria-label="Decrease quantity"
-                          className="px-3 py-1 text-sm hover:text-cobalt"
+                          className="px-3 py-1 text-sm hover:text-accent"
                           onClick={() => setQty(line.slug, line.size, line.qty - 1)}
                         >
                           −
@@ -108,7 +108,7 @@ export default function BagDrawer() {
                         <button
                           type="button"
                           aria-label="Increase quantity"
-                          className="px-3 py-1 text-sm hover:text-cobalt"
+                          className="px-3 py-1 text-sm hover:text-accent"
                           onClick={() => setQty(line.slug, line.size, line.qty + 1)}
                         >
                           +
@@ -117,7 +117,7 @@ export default function BagDrawer() {
                       <button
                         type="button"
                         onClick={() => remove(line.slug, line.size)}
-                        className="text-xs text-ink-3 underline underline-offset-2 hover:text-cobalt"
+                        className="text-xs text-ink-3 underline underline-offset-2 hover:text-accent"
                       >
                         Remove
                       </button>

@@ -24,7 +24,7 @@ export default function Home() {
         <div className="grid items-end gap-10 md:grid-cols-[1.1fr_1fr]">
           <div>
             <Reveal>
-              <p className="label text-cobalt">Rabble — AW26, Drop 01</p>
+              <p className="label text-accent">Rabble — AW26, Drop 01</p>
             </Reveal>
             <Reveal delay={80}>
               <h1 className="display mt-4 text-[clamp(3rem,9vw,7rem)]">
@@ -32,7 +32,7 @@ export default function Home() {
                 <br />
                 you can
                 <br />
-                <span className="serif-note lowercase text-cobalt">wear.</span>
+                <span className="serif-note lowercase text-accent">wear.</span>
               </h1>
             </Reveal>
             <Reveal delay={160}>
@@ -64,7 +64,7 @@ export default function Home() {
                   sizes="(min-width: 768px) 45vw, 100vw"
                   className="object-cover"
                 />
-                <span className="hang-tag hang-tag--cobalt absolute left-4 top-4">
+                <span className="hang-tag hang-tag--accent absolute left-4 top-4">
                   Sunstrike Co-ord
                 </span>
               </div>
@@ -124,7 +124,7 @@ export default function Home() {
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/60 to-transparent p-6 pt-20">
                   <h3 className="display text-4xl text-chalk md:text-5xl">Men</h3>
-                  <p className="label mt-2 text-chalk/80 transition-colors group-hover:text-cobalt">
+                  <p className="label mt-2 text-chalk/80 transition-colors group-hover:text-accent">
                     Make a scene →
                   </p>
                 </div>
@@ -143,7 +143,7 @@ export default function Home() {
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/60 to-transparent p-6 pt-20">
                   <h3 className="display text-4xl text-chalk md:text-5xl">Women</h3>
-                  <p className="label mt-2 text-chalk/80 transition-colors group-hover:text-cobalt">
+                  <p className="label mt-2 text-chalk/80 transition-colors group-hover:text-accent">
                     Start something →
                   </p>
                 </div>
@@ -159,7 +159,7 @@ export default function Home() {
           <h2 id="new-heading" className="display text-3xl md:text-4xl">
             New this week
           </h2>
-          <Link href="/new-arrivals" className="label shrink-0 hover:text-cobalt">
+          <Link href="/new-arrivals" className="label shrink-0 hover:text-accent">
             View all →
           </Link>
         </Reveal>

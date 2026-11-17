@@ -2,7 +2,7 @@
 
 /* ————————————————————————————————
    RABBLE design tokens
-   chalk paper base · soft ink · cobalt signal
+   chalk paper base · soft ink · accent signal
    ———————————————————————————————— */
 
 @theme {
@@ -12,8 +12,8 @@
   --color-ink: #1b1a16;
   --color-ink-2: #44423a;
   --color-ink-3: #7a776c;
-  --color-cobalt: #2438e8;
-  --color-cobalt-deep: #1b2bc4;
+  --color-accent: #6e2a35;
+  --color-accent-deep: #531f28;
   --color-moss: #5d6648;
   --color-clay: #b06c43;
   --color-butter: #e9c05c;
@@ -47,7 +47,7 @@ body {
 }
 
 ::selection {
-  background: var(--color-cobalt);
+  background: var(--color-accent);
   color: var(--color-chalk);
 }
 
@@ -110,7 +110,7 @@ body {
   color: var(--color-chalk);
 }
 .btn-ink:hover {
-  background: var(--color-cobalt);
+  background: var(--color-accent);
 }
 .btn-ghost {
   border: 1px solid color-mix(in srgb, var(--color-ink) 35%, transparent);
@@ -127,14 +127,14 @@ body {
   color: var(--color-ink);
 }
 .btn-chalk:hover {
-  background: var(--color-cobalt);
+  background: var(--color-accent);
   color: var(--color-chalk);
 }
 
 /* ——— focus ——— */
 
 :focus-visible {
-  outline: 2px solid var(--color-cobalt);
+  outline: 2px solid var(--color-accent);
   outline-offset: 3px;
   border-radius: var(--radius-xs);
 }
@@ -230,8 +230,8 @@ body {
   background: var(--color-chalk);
   opacity: 0.85;
 }
-.hang-tag--cobalt {
-  background: var(--color-cobalt);
+.hang-tag--accent {
+  background: var(--color-accent);
 }
 
 /* ——— misc ——— */

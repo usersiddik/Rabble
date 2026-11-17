@@ -54,7 +54,7 @@ export default function CollectionView({
     <div className="mx-auto max-w-7xl px-4 pb-20 pt-10 sm:px-6 md:pt-14">
       {/* header */}
       <div className="max-w-2xl">
-        <p className="serif-note text-lg text-cobalt">{tagline}</p>
+        <p className="serif-note text-lg text-accent">{tagline}</p>
         <h1 className="display mt-2 text-5xl md:text-7xl">{title}</h1>
         <p className="mt-4 text-ink-2">{blurb}</p>
       </div>

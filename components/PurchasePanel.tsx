@@ -42,7 +42,7 @@ export default function PurchasePanel({ product }: { product: Product }) {
             <button
               type="button"
               onClick={() => setGuideOpen(true)}
-              className="text-xs text-ink-3 underline underline-offset-2 hover:text-cobalt"
+              className="text-xs text-ink-3 underline underline-offset-2 hover:text-accent"
             >
               Size guide
             </button>
@@ -67,7 +67,7 @@ export default function PurchasePanel({ product }: { product: Product }) {
             ))}
           </div>
           {error && (
-            <p role="alert" className="mt-2 text-xs font-medium text-cobalt">
+            <p role="alert" className="mt-2 text-xs font-medium text-accent">
               Pick a size first — the bag insists.
             </p>
           )}
@@ -81,7 +81,7 @@ export default function PurchasePanel({ product }: { product: Product }) {
             type="button"
             aria-label="Decrease quantity"
             onClick={() => setQty((q) => Math.max(1, q - 1))}
-            className="px-4 py-3 hover:text-cobalt"
+            className="px-4 py-3 hover:text-accent"
           >
             −
           </button>
@@ -90,7 +90,7 @@ export default function PurchasePanel({ product }: { product: Product }) {
             type="button"
             aria-label="Increase quantity"
             onClick={() => setQty((q) => Math.min(9, q + 1))}
-            className="px-4 py-3 hover:text-cobalt"
+            className="px-4 py-3 hover:text-accent"
           >
             +
           </button>
@@ -158,7 +158,7 @@ export default function PurchasePanel({ product }: { product: Product }) {
               <button
                 type="button"
                 onClick={() => setGuideOpen(false)}
-                className="label hover:text-cobalt"
+                className="label hover:text-accent"
               >
                 Close
               </button>

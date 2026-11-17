@@ -10,7 +10,7 @@ interface RailItem {
   kind: GarmentKind;
   colors: GarmentColors;
   tag?: string;
-  tagTone?: "ink" | "cobalt";
+  tagTone?: "ink" | "accent";
 }
 
 /** Drop 01 lineup — colours roughly match each product's photography. */
@@ -23,7 +23,7 @@ const RAIL: RailItem[] = [
     kind: "trucker",
     colors: { body: "#2e3f63", shade: "#1f2c48", detail: "#b78e5a" },
     tag: "NEW",
-    tagTone: "cobalt",
+    tagTone: "accent",
   },
   {
     slug: "half-day-bomber",
@@ -36,7 +36,7 @@ const RAIL: RailItem[] = [
     kind: "cropped-hoodie",
     colors: { body: "#e9c05c", shade: "#caa041" },
     tag: "NEW",
-    tagTone: "cobalt",
+    tagTone: "accent",
   },
   {
     slug: "reprint-tee-01",

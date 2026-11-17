@@ -44,7 +44,7 @@ export default function ProductCard({
         {product.badge && (
           <span
             className={`hang-tag absolute left-3 top-3 ${
-              product.badge === "new" ? "hang-tag--cobalt" : ""
+              product.badge === "new" ? "hang-tag--accent" : ""
             }`}
           >
             {product.stockNote ?? BADGE_LABEL[product.badge]}
@@ -52,7 +52,7 @@ export default function ProductCard({
         )}
       </div>
       <div className="mt-3 flex items-baseline justify-between gap-3">
-        <h3 className="text-sm font-semibold leading-snug group-hover:text-cobalt">
+        <h3 className="text-sm font-semibold leading-snug group-hover:text-accent">
           {product.name}
         </h3>
         <p className="tabular shrink-0 text-sm">

@@ -239,7 +239,7 @@ interface GarmentArtProps {
   kind: GarmentKind;
   colors: GarmentColors;
   tag?: string;
-  tagTone?: "ink" | "cobalt";
+  tagTone?: "ink" | "accent";
   className?: string;
 }
 
@@ -260,7 +260,7 @@ export default function GarmentArt({ kind, colors, tag, tagTone = "ink", classNa
               width={tag.length * 7 + 18}
               height="22"
               rx="3"
-              fill={tagTone === "cobalt" ? "#2438e8" : "#1b1a16"}
+              fill={tagTone === "accent" ? "#6e2a35" : "#1b1a16"}
             />
             <circle cx="126" cy="75" r="2.2" fill="#f2efe8" opacity="0.9" />
             <text

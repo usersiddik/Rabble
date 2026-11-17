@@ -33,7 +33,7 @@ export default function Footer() {
           {/* newsletter */}
           <div>
             <h2 className="display text-2xl">
-              Get the noise first<span className="text-cobalt">.</span>
+              Get the noise first<span className="text-accent">.</span>
             </h2>
             <p className="mt-2 max-w-xs text-sm text-chalk/60">
               Drops, restocks and the occasional bad idea. One email a week, tops.
@@ -62,7 +62,7 @@ export default function Footer() {
                   placeholder="you@example.com"
                   className="w-full bg-transparent px-5 py-3 text-sm text-chalk placeholder:text-chalk/40 focus:outline-none"
                 />
-                <button type="submit" className="label shrink-0 px-5 text-chalk hover:text-cobalt">
+                <button type="submit" className="label shrink-0 px-5 text-chalk hover:text-accent">
                   Join
                 </button>
               </form>
@@ -77,7 +77,7 @@ export default function Footer() {
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm text-chalk/85 transition-colors hover:text-cobalt"
+                      className="text-sm text-chalk/85 transition-colors hover:text-accent"
                     >
                       {link.label}
                     </Link>

@@ -7,7 +7,7 @@ interface ProductGalleryProps {
   images: string[];
   name: string;
   badge?: string;
-  badgeTone?: "ink" | "cobalt";
+  badgeTone?: "ink" | "accent";
 }
 
 export default function ProductGallery({ images, name, badge, badgeTone = "ink" }: ProductGalleryProps) {
@@ -45,7 +45,7 @@ export default function ProductGallery({ images, name, badge, badgeTone = "ink" 
           style={{ animation: "page-in 0.4s both" }}
         />
         {badge && (
-          <span className={`hang-tag absolute left-4 top-4 ${badgeTone === "cobalt" ? "hang-tag--cobalt" : ""}`}>
+          <span className={`hang-tag absolute left-4 top-4 ${badgeTone === "accent" ? "hang-tag--accent" : ""}`}>
             {badge}
           </span>
         )}

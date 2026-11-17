@@ -22,9 +22,9 @@ export default function AboutPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 pb-24 pt-12 sm:px-6 md:pt-20">
       <Reveal>
-        <p className="label text-cobalt">The manifesto</p>
+        <p className="label text-accent">The manifesto</p>
         <h1 className="display mt-4 max-w-4xl text-5xl md:text-7xl">
-          The crowd got <span className="serif-note lowercase text-cobalt">a point of view.</span>
+          The crowd got <span className="serif-note lowercase text-accent">a point of view.</span>
         </h1>
       </Reveal>
 
@@ -46,7 +46,7 @@ export default function AboutPage() {
           <Reveal delay={320}>
             <p className="display text-2xl md:text-3xl">
               If that sounds like you —<br />
-              welcome to the rabble<span className="text-cobalt">.</span>
+              welcome to the rabble<span className="text-accent">.</span>
             </p>
             <Link href="/new-arrivals" className="btn btn-ink mt-8">
               Shop Drop 01

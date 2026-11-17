@@ -50,13 +50,13 @@ export default async function ProductPage({
       <nav aria-label="Breadcrumb" className="label text-ink-3">
         <ol className="flex flex-wrap gap-1.5">
           <li>
-            <Link href="/" className="hover:text-cobalt">
+            <Link href="/" className="hover:text-accent">
               Home
             </Link>
             <span aria-hidden> /</span>
           </li>
           <li>
-            <Link href={`/${collection}`} className="hover:text-cobalt">
+            <Link href={`/${collection}`} className="hover:text-accent">
               {collectionLabel}
             </Link>
             <span aria-hidden> /</span>
@@ -72,7 +72,7 @@ export default async function ProductPage({
           images={product.images}
           name={`${product.name} in ${product.color}`}
           badge={product.badge ? (product.stockNote ?? BADGE_LABEL[product.badge]) : undefined}
-          badgeTone={product.badge === "new" ? "cobalt" : "ink"}
+          badgeTone={product.badge === "new" ? "accent" : "ink"}
         />
 
         <div className="md:sticky md:top-24 md:self-start">
@@ -101,7 +101,7 @@ export default async function ProductPage({
             <h2 id="related-heading" className="display text-2xl md:text-3xl">
               Runs in the same crowd
             </h2>
-            <Link href={`/${collection}`} className="label shrink-0 hover:text-cobalt">
+            <Link href={`/${collection}`} className="label shrink-0 hover:text-accent">
               View all →
             </Link>
           </Reveal>
