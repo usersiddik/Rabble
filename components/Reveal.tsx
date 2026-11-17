@@ -8,10 +8,15 @@ interface RevealProps {
   /** stagger delay in ms */
   delay?: number;
   as?: "div" | "section" | "span" | "li";
+  /**
+   * `fade` (default) fades the block up; `mask` slides it up from behind its own
+   * bottom edge — for display headings.
+   */
+  variant?: "fade" | "mask";
 }
 
-/** Fades content up once it enters the viewport. Pure CSS transition, respects reduced motion. */
-export default function Reveal({ children, className = "", delay = 0, as = "div" }: RevealProps) {
+/** Fades (or mask-slides) content up once it enters the viewport. Pure CSS transition, respects reduced motion. */
+export default function Reveal({ children, className = "", delay = 0, as = "div", variant = "fade" }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,12 +38,16 @@ export default function Reveal({ children, className = "", delay = 0, as = "div"
   }, []);
 
   const Tag = as as "div";
+  const style = delay ? ({ "--reveal-delay": `${delay}ms` } as React.CSSProperties) : undefined;
+  if (variant === "mask") {
+    return (
+      <div ref={ref} className={`reveal-mask ${className}`} style={style}>
+        <div className="reveal-mask-inner">{children}</div>
+      </div>
+    );
+  }
   return (
-    <Tag
-      ref={ref}
-      className={`reveal ${className}`}
-      style={delay ? ({ "--reveal-delay": `${delay}ms` } as React.CSSProperties) : undefined}
-    >
+    <Tag ref={ref} className={`reveal ${className}`} style={style}>
       {children}
     </Tag>
   );

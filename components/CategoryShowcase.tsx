@@ -62,9 +62,11 @@ export default function CategoryShowcase({ atelierImage }: { atelierImage?: stri
         <Reveal className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="label text-steel-deep">Men &amp; women — two moods, one crowd</p>
-            <h2 id="mood-heading" className="display display-md mt-2">
-              Pick your noise
-            </h2>
+            <Reveal variant="mask" delay={80} className="mt-2">
+              <h2 id="mood-heading" className="display display-md">
+                Pick your noise
+              </h2>
+            </Reveal>
           </div>
           <p className="serif-note max-w-xs text-lg text-carbon-2 md:text-right">
             Loud prints for the front row. Quieter cuts for the after-party.

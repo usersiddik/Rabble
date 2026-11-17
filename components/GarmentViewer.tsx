@@ -11,13 +11,40 @@ const BADGE_LABEL: Record<string, string> = {
   waitlist: "Drop 02",
 };
 
+type View = Side | "side";
+
 /**
  * Product page viewer. Front | Back on a studio backdrop, with thumbnails for each side
  * (and the side preview when photography provides one). Reuses <GarmentCutout />.
+ * Switching sides turns the garment like it hangs on the rack: to 90°, swap, back to 0°,
+ * with a slight lift.
  */
 export default function GarmentViewer({ garment }: { garment: Garment }) {
-  const [side, setSide] = useState<Side | "side">("front");
-  const views: Array<Side | "side"> = ["front"];
+  // `side` is the selection (buttons follow it at once); `shown` is the face on the stage
+  const [side, setSide] = useState<View>("front");
+  const [shown, setShown] = useState<View>("front");
+  const [phase, setPhase] = useState<"enter" | "idle" | "out" | "in">("enter");
+
+  const select = (v: View) => {
+    setSide(v);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setShown(v);
+      setPhase("idle");
+      return;
+    }
+    if (phase === "idle" && v !== shown) setPhase("out");
+  };
+  const onTurnEnd = (e: React.AnimationEvent<HTMLDivElement>) => {
+    if (e.target !== e.currentTarget) return;
+    if (phase === "out") {
+      setShown(side);
+      setPhase("in");
+    } else {
+      // a click that landed mid-turn still gets its face
+      setPhase(side !== shown ? "out" : "idle");
+    }
+  };
+  const views: View[] = ["front"];
   if (hasSide(garment, "back")) views.push("back");
   if (garment.sidePreview) views.push("side");
 
@@ -34,7 +61,7 @@ export default function GarmentViewer({ garment }: { garment: Garment }) {
               role="tab"
               aria-selected={v === side}
               aria-controls="garment-stage"
-              onClick={() => setSide(v)}
+              onClick={() => select(v)}
               className={`studio relative h-24 w-20 shrink-0 overflow-hidden p-2 transition-opacity ${
                 v === side ? "ring-1 ring-carbon" : "opacity-60 hover:opacity-100"
               }`}
@@ -49,10 +76,10 @@ export default function GarmentViewer({ garment }: { garment: Garment }) {
       <div
         id="garment-stage"
         role="tabpanel"
-        className={`grain grain-light relative order-1 aspect-[4/5] flex-1 overflow-hidden ${dark ? "studio-dark" : "studio"}`}
+        className={`viewer-stage grain grain-light relative order-1 aspect-[4/5] flex-1 overflow-hidden ${dark ? "studio-dark" : "studio"}`}
       >
-        <div key={side} className="flex h-full w-full items-center justify-center p-[8%]" style={{ animation: "page-in 0.4s both" }}>
-          <GarmentCutout garment={garment} side={side} priority className="h-full w-auto max-w-full" />
+        <div className="viewer-face flex h-full w-full items-center justify-center p-[8%]" data-phase={phase} onAnimationEnd={onTurnEnd}>
+          <GarmentCutout garment={garment} side={shown} priority className="h-full w-auto max-w-full" />
         </div>
         {garment.badge && (
           <span
@@ -70,7 +97,7 @@ export default function GarmentViewer({ garment }: { garment: Garment }) {
                 key={s}
                 type="button"
                 aria-pressed={side === s}
-                onClick={() => setSide(s)}
+                onClick={() => select(s)}
                 className={`label rounded-full px-4 py-2 transition-colors ${
                   side === s ? "bg-carbon text-alabaster" : "text-carbon-2 hover:text-carbon"
                 }`}

@@ -71,7 +71,11 @@ export default function CollectionView({ title, tagline, blurb, garments }: Coll
     <div className="mx-auto max-w-7xl px-4 pb-20 sm:px-6">
       <div className="max-w-2xl pt-10 md:pt-14">
         <p className="serif-note text-xl text-terracotta">{tagline}</p>
-        <h1 className="display mt-2 text-5xl md:text-7xl">{title}</h1>
+        <h1 className="display mt-2 text-5xl md:text-7xl">
+          <span className="mask-line">
+            <span className="mask-up">{title}</span>
+          </span>
+        </h1>
         <p className="prose-editorial mt-4 max-w-lg">{blurb}</p>
       </div>
 
@@ -131,9 +135,11 @@ export default function CollectionView({ title, tagline, blurb, garments }: Coll
               <p className={`label ${d.status === "live" ? "text-terracotta" : "text-cobalt"}`}>
                 {d.code} — {d.name}
               </p>
-              <h2 id={`chapter-${d.number}`} className="display mt-1 scroll-mt-48 text-3xl md:text-4xl">
-                {d.status === "live" ? "On the rail now" : "On the way"}
-              </h2>
+              <Reveal variant="mask" delay={60} className="mt-1">
+                <h2 id={`chapter-${d.number}`} className="display scroll-mt-48 text-3xl md:text-4xl">
+                  {d.status === "live" ? "On the rail now" : "On the way"}
+                </h2>
+              </Reveal>
             </div>
             <p className="serif-note max-w-xs text-lg text-carbon-2 md:text-right">{d.tagline}</p>
           </Reveal>

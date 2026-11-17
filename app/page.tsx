@@ -7,6 +7,7 @@ import GarmentRack, { HeroEditorialBanner } from "@/components/GarmentRack";
 import JoinDrop from "@/components/JoinDrop";
 import Marquee from "@/components/Marquee";
 import { NoiseBars, NoiseDivider } from "@/components/Noise";
+import Parallax from "@/components/Parallax";
 import Reveal from "@/components/Reveal";
 import TrustStrip from "@/components/TrustStrip";
 import { getGarment, liveGarments } from "@/content/garments";
@@ -27,7 +28,7 @@ export default function Home() {
         <h1 id="rack-heading" className="sr-only">
           Rabble — {live.code} {live.name}, live now. Front and back printed tees and boutique wear, on the rack.
         </h1>
-        <div className="relative pb-12 pt-8 md:pb-16">
+        <div className="relative pb-12 pt-5 md:pb-16 md:pt-4">
           <GarmentRack />
         </div>
         <HeroEditorialBanner />
@@ -72,11 +73,13 @@ export default function Home() {
           </Reveal>
           <Reveal delay={100} className="order-1 md:order-2">
             <p className="label text-steel-deep">Why two prints</p>
-            <h2 id="fb-heading" className="display display-lg mt-3">
-              Front says hello.
-              <br />
-              <span className="serif-note lowercase text-terracotta">Back says goodbye.</span>
-            </h2>
+            <Reveal variant="mask" delay={140} className="mt-3">
+              <h2 id="fb-heading" className="display display-lg">
+                Front says hello.
+                <br />
+                <span className="serif-note lowercase text-terracotta">Back says goodbye.</span>
+              </h2>
+            </Reveal>
             <p className="prose-editorial mt-6 max-w-md">
               A garment is seen from behind for most of its life. So every Rabble piece carries a small signal on the
               chest and a broadcast across the back. Never the same artwork at two sizes.
@@ -93,9 +96,11 @@ export default function Home() {
         <Reveal className="mb-8 flex items-end justify-between">
           <div>
             <p className="label text-steel-deep">Fresh off the press</p>
-            <h2 id="new-heading" className="display display-md mt-2">
-              New this week
-            </h2>
+            <Reveal variant="mask" delay={80} className="mt-2">
+              <h2 id="new-heading" className="display display-md">
+                New this week
+              </h2>
+            </Reveal>
           </div>
           <Link href="/new-arrivals" className="label shrink-0 hover:text-terracotta">
             View all →
@@ -122,9 +127,11 @@ export default function Home() {
                 <p className="label text-cobalt-light">
                   {next.code} — {next.name}
                 </p>
-                <h2 id="drop-heading" className="display display-lg mt-3">
-                  {next.tagline}
-                </h2>
+                <Reveal variant="mask" delay={80} className="mt-3">
+                  <h2 id="drop-heading" className="display display-lg">
+                    {next.tagline}
+                  </h2>
+                </Reveal>
                 <p className="mt-5 max-w-md text-lg text-alabaster/70">{next.blurb}</p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link href="/drop" className="btn btn-alabaster">
@@ -149,13 +156,18 @@ export default function Home() {
 
       {/* ——— campaign: manifesto band ——— */}
       <section className="relative overflow-hidden bg-alabaster-2 py-[var(--space-section)]" aria-labelledby="campaign-heading">
-        <NoiseBars seed={13} count={120} aspect={0.12} className="pointer-events-none absolute inset-x-0 bottom-0 h-40 w-full text-carbon/5" />
+        {/* the noise drifts against the scroll, behind the manifesto line */}
+        <Parallax speed={0.05} className="pointer-events-none absolute inset-x-0 -bottom-8 h-48">
+          <NoiseBars seed={13} count={120} aspect={0.12} className="h-full w-full text-carbon/5" />
+        </Parallax>
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
           <Reveal>
             <p className="label text-steel-deep">The point of all this</p>
-            <h2 id="campaign-heading" className="display display-lg mt-4 max-w-3xl">
-              A rabble is just a crowd <span className="serif-note lowercase text-terracotta">with a point of view.</span>
-            </h2>
+            <Reveal variant="mask" delay={80} className="mt-4">
+              <h2 id="campaign-heading" className="display display-lg max-w-3xl">
+                A rabble is just a crowd <span className="serif-note lowercase text-terracotta">with a point of view.</span>
+              </h2>
+            </Reveal>
             <Link href="/about" className="btn btn-carbon mt-8">
               Read the manifesto
             </Link>

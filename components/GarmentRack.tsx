@@ -18,8 +18,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import GarmentRender from "./GarmentRender";
 import { photoFor, renderProps } from "./GarmentCutout";
 import { NoiseBars } from "./Noise";
-import { RACK, RACK_START, type RackPiece } from "@/lib/rack";
+import { RACKS, type RackFilter, type RackLineup, type RackPiece } from "@/lib/rack";
 import { formatINR, getGarment } from "@/content/garments";
+import { site } from "@/content/site";
+import { useCart } from "@/lib/cart";
 
 /* ———————————————————————————— tuning ———————————————————————————— */
 
@@ -27,6 +29,7 @@ const loadMotionFeatures = () => import("./motion-features").then((mod) => mod.d
 
 const SPRING: Transition = { type: "spring", stiffness: 140, damping: 20, mass: 0.8 };
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
+const EASE_IN_OUT = [0.65, 0, 0.35, 1] as const;
 
 /** side-hang compression: rotateY + scaleX of an inactive garment */
 const TILT = 55;
@@ -39,7 +42,7 @@ interface Sizes {
 }
 // keep in step with `.rack` in globals.css
 const DESKTOP: Sizes = { active: 380, side: 108, gap: 10 };
-const LAPTOP: Sizes = { active: 300, side: 88, gap: 8 };
+const LAPTOP: Sizes = { active: 280, side: 82, gap: 8 };
 const TABLET: Sizes = { active: 340, side: 96, gap: 8 };
 const MOBILE: Sizes = { active: 228, side: 66, gap: 4 };
 
@@ -72,11 +75,19 @@ interface SlotProps {
   /** which way this item should swing when the rack re-flows (−1, 0, 1) */
   swayDir: number;
   swayTick: number;
+  /** studio inspect: the active piece steps forward, the rest slide off the rail */
+  inspect: boolean;
+  /** which side of the active piece this one hangs on (−1, 0, 1) */
+  offset: number;
+  /** px the active piece glides to reach the rail's centre while inspected */
+  centreShift: number;
+  /** ms before this hanger is hung on the rail; null = already there (no entrance) */
+  enterDelay: number | null;
   onActivate: (i: number) => void;
   onFlip: () => void;
 }
 
-function Slot({ piece, index, active, flipped, sizes, reduced, swayDir, swayTick, onActivate, onFlip }: SlotProps) {
+function Slot({ piece, index, active, flipped, sizes, reduced, swayDir, swayTick, inspect, offset, centreShift, enterDelay, onActivate, onFlip }: SlotProps) {
   const [swayScope, animateSway] = useAnimate();
   // whether this hanger was already open when the press began: a tap on a closed
   // hanger opens it (focus lands first), only a tap on an open one flips it
@@ -128,11 +139,13 @@ function Slot({ piece, index, active, flipped, sizes, reduced, swayDir, swayTick
   const transition = reduced ? { duration: 0 } : SPRING;
   const label = `${g.name}, ${g.color} — ${formatINR(g.price)}`;
   const press = () => (wasActive.current ? onFlip() : onActivate(index));
+  const stepAside = inspect && !active;
 
   return (
     <m.div
       role="button"
-      tabIndex={0}
+      tabIndex={stepAside ? -1 : 0}
+      aria-hidden={stepAside || undefined}
       aria-label={active ? `${label}. Press to flip to the ${flipped ? "front" : "back"} print` : `${label}. Press to bring to the front`}
       aria-pressed={active}
       onHoverStart={() => {
@@ -150,14 +163,31 @@ function Slot({ piece, index, active, flipped, sizes, reduced, swayDir, swayTick
           else onActivate(index);
         }
       }}
-      className={`rack-slot relative flex shrink-0 cursor-pointer justify-center outline-offset-[-2px] ${active ? "z-10" : "z-0"}`}
+      className={`rack-slot relative flex shrink-0 cursor-pointer justify-center outline-offset-[-2px] ${active ? "z-10" : "z-0"} ${
+        stepAside ? "pointer-events-none" : ""
+      } ${enterDelay === null ? "" : "rack-enter"}`}
       style={{
         width,
         height: "var(--rack-h)",
         marginInline: "calc(var(--rack-gap) / 2)",
         perspective: 1400,
+        ...(enterDelay === null ? {} : ({ "--rack-delay": `${enterDelay}ms` } as React.CSSProperties)),
       }}
     >
+      {/* studio inspect: the active piece lifts toward the camera, its neighbours slide off the rail */}
+      <m.div
+        initial={false}
+        animate={
+          inspect
+            ? active
+              ? { scale: 1.08, opacity: 1, x: centreShift }
+              : { scale: 1, opacity: 0, x: offset * 60 }
+            : { scale: 1, opacity: 1, x: 0 }
+        }
+        transition={reduced ? { duration: 0 } : { duration: 0.55, ease: EASE_IN_OUT, delay: inspect || active ? 0 : 0.12 }}
+        className="pointer-events-none flex h-full w-full shrink-0 justify-center"
+        style={{ transformOrigin: "50% 3.2%" }}
+      >
       {/* sway pivot — origin at the hanger hook */}
       <div
         ref={swayScope}
@@ -193,19 +223,32 @@ function Slot({ piece, index, active, flipped, sizes, reduced, swayDir, swayTick
           </m.div>
         </m.div>
       </div>
+      </m.div>
     </m.div>
   );
 }
 
 /* ———————————————————————————— the rack ———————————————————————————— */
 
-export default function GarmentRack() {
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+function Rail({ lineup, entrance }: { lineup: RackLineup; entrance: "siblings" | "all" }) {
+  const pieces = lineup.pieces;
   const sizes = useSizes();
   const reduced = useReducedMotion() ?? false;
-  const [active, setActive] = useState(RACK_START);
+  const { add } = useCart();
+  const [active, setActive] = useState(lineup.start);
   const [flipped, setFlipped] = useState(false);
   const [swayTick, setSwayTick] = useState(0);
-  const activeRef = useRef(RACK_START);
+  const [inspect, setInspect] = useState(false);
+  const [centreShift, setCentreShift] = useState(0);
+  const [size, setSize] = useState<string | null>(null);
+  const [added, setAdded] = useState(false);
+  const addedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const inspectRef = useRef(false);
+  // where focus goes once the caption swaps between browsing and inspecting
+  const focusNext = useRef<"size" | "inspect" | null>(null);
+  const activeRef = useRef(lineup.start);
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const pillRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -215,6 +258,7 @@ export default function GarmentRack() {
 
   const activate = useCallback((i: number) => {
     if (drag.current.moved || drag.current.down) return;
+    if (inspectRef.current) return;
     if (activeRef.current === i) return;
     activeRef.current = i;
     setActive(i);
@@ -233,13 +277,13 @@ export default function GarmentRack() {
     const vp = viewportRef.current;
     const track = trackRef.current;
     if (!vp || !track || !sizes) return;
-    const full = sizes.active + (RACK.length - 1) * sizes.side + RACK.length * sizes.gap;
+    const full = sizes.active + (pieces.length - 1) * sizes.side + pieces.length * sizes.gap;
     const pad = parseFloat(getComputedStyle(track).paddingLeft) || 0;
     if (full + 2 * pad <= vp.clientWidth + 1) return;
     const centre = pad + active * (sizes.side + sizes.gap) + sizes.gap / 2 + sizes.active / 2;
     vp.scrollTo({ left: centre - vp.clientWidth / 2, behavior: reduced || !centred.current ? "auto" : "smooth" });
     centred.current = true;
-  }, [active, sizes, reduced]);
+  }, [active, sizes, reduced, pieces.length]);
 
   // drag-to-scroll on pointer devices; native touch swipe already works
   useEffect(() => {
@@ -278,7 +322,7 @@ export default function GarmentRack() {
     };
   }, []);
 
-  const piece = RACK[active];
+  const piece = pieces[active];
   const g = piece.garment;
   const collection = g.gender === "women" ? "/women" : "/men";
   const audience = g.gender === "women" ? "Women" : g.gender === "men" ? "Men" : "Unisex";
@@ -291,6 +335,52 @@ export default function GarmentRack() {
     if (el) setPill({ x: el.offsetLeft, w: el.offsetWidth });
   }, [flipped, hasBackPrint]);
 
+  const openInspect = () => {
+    // glide the inspected piece to the middle of the rail
+    const slot = trackRef.current?.children[active];
+    const vp = viewportRef.current;
+    if (slot && vp) {
+      const s = slot.getBoundingClientRect();
+      const v = vp.getBoundingClientRect();
+      setCentreShift(Math.round(v.left + v.width / 2 - (s.left + s.width / 2)));
+    }
+    inspectRef.current = true;
+    focusNext.current = "size";
+    setSize((s) => s ?? (g.sizes.includes("M") ? "M" : g.sizes[0]));
+    setAdded(false);
+    setInspect(true);
+  };
+  const closeInspect = useCallback(() => {
+    inspectRef.current = false;
+    focusNext.current = "inspect";
+    setInspect(false);
+  }, []);
+  const addToBag = () => {
+    if (!size) return;
+    add(g.slug, size, 1);
+    setAdded(true);
+    clearTimeout(addedTimer.current);
+    addedTimer.current = setTimeout(() => setAdded(false), 1600);
+  };
+  useEffect(() => () => clearTimeout(addedTimer.current), []);
+
+  // Escape steps back out of the studio
+  useEffect(() => {
+    if (!inspect) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeInspect();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [inspect, closeInspect]);
+
+  const focusOnMount = (target: "size" | "inspect") => (el: HTMLElement | null) => {
+    if (el && focusNext.current === target) {
+      focusNext.current = null;
+      el.focus({ preventScroll: true });
+    }
+  };
+
   // Front | Back is a radiogroup: one tab stop, arrows move the selection
   const onPillKey = (e: React.KeyboardEvent) => {
     if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) return;
@@ -301,8 +391,7 @@ export default function GarmentRack() {
   };
 
   return (
-    <LazyMotion features={loadMotionFeatures}>
-      <div className="rack">
+    <>
         {/* ——— the rail ——— */}
         <div className="relative mx-auto max-w-7xl">
           {/* brushed-steel bar + wall brackets */}
@@ -321,7 +410,7 @@ export default function GarmentRack() {
             className="no-scrollbar relative cursor-grab touch-pan-x select-none overflow-x-auto overflow-y-visible pb-10 pt-1 active:cursor-grabbing"
           >
             <div ref={trackRef} className="rack-track mx-auto flex w-max items-start">
-              {RACK.map((p, i) => (
+              {pieces.map((p, i) => (
                 <Slot
                   key={p.garment.slug}
                   piece={p}
@@ -332,6 +421,12 @@ export default function GarmentRack() {
                   reduced={reduced}
                   swayDir={i === active ? 0 : i < active ? -1 : 1}
                   swayTick={swayTick}
+                  inspect={inspect}
+                  offset={Math.sign(i - active)}
+                  centreShift={centreShift}
+                  enterDelay={
+                    reduced ? null : entrance === "all" ? i * 55 : i === lineup.start ? null : 120 + Math.abs(i - lineup.start) * 70
+                  }
                   onActivate={activate}
                   onFlip={flip}
                 />
@@ -353,9 +448,15 @@ export default function GarmentRack() {
                 className="absolute inset-0"
               >
                 <p className="label text-steel-deep">
+                  <span className="tabular">
+                    {pad2(active + 1)} / {pad2(pieces.length)}
+                  </span>
+                  <span aria-hidden className="mx-2 text-carbon/25">
+                    —
+                  </span>
                   {audience} <span aria-hidden className="mx-1 text-carbon/25">/</span> {g.category}
                 </p>
-                <h2 className="display mt-1.5 text-2xl md:text-3xl">{g.name}</h2>
+                <h2 className="display mt-1.5 text-xl sm:text-2xl md:text-3xl">{g.name}</h2>
                 <p className="tabular mt-1.5 text-sm text-steel-deep">
                   {piece.spec} ·{" "}
                   {g.compareAt && <span className="mr-1 line-through">{formatINR(g.compareAt)}</span>}
@@ -407,35 +508,138 @@ export default function GarmentRack() {
             })}
           </div>
 
-          <div className="mt-6 flex items-center justify-center gap-3">
-            <button
-              type="button"
-              aria-label="Previous piece"
-              onClick={() => activate((active + RACK.length - 1) % RACK.length)}
-              className="btn btn-ghost size-11 !p-0"
-            >
-              ←
-            </button>
-            <Link href={collection} className="btn btn-carbon">
-              {audience === "Unisex" ? "Shop the collection" : `Shop ${audience.toLowerCase()}`}
-            </Link>
-            <button
-              type="button"
-              aria-label="Next piece"
-              onClick={() => activate((active + 1) % RACK.length)}
-              className="btn btn-ghost size-11 !p-0"
-            >
-              →
-            </button>
+          {/* browsing ⇄ studio inspect (sizes, add to bag) */}
+          <div className="relative mt-6 min-h-[8.5rem] w-full">
+            <AnimatePresence mode="wait" initial={false}>
+              {inspect ? (
+                <m.div
+                  key="inspect"
+                  initial={reduced ? false : { opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={reduced ? undefined : { opacity: 0, y: 12 }}
+                  transition={{ duration: 0.4, ease: EASE_OUT }}
+                  className="flex flex-col items-center"
+                >
+                  <div role="group" aria-label={`Size for ${g.name}`} className="flex flex-wrap justify-center gap-2">
+                    {g.sizes.map((s) => (
+                      <button
+                        key={s}
+                        ref={size === s ? focusOnMount("size") : undefined}
+                        type="button"
+                        aria-pressed={size === s}
+                        onClick={() => setSize(s)}
+                        className="pill label inline-flex size-10 items-center justify-center !px-0"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+                    <button type="button" onClick={addToBag} className="btn btn-carbon min-w-[15rem]" aria-live="polite">
+                      {added ? `Added — size ${size} ✓` : `Add to bag — ${formatINR(g.price)}`}
+                    </button>
+                    <Link href={`/product/${g.slug}`} className="label underline decoration-carbon/30 underline-offset-4 hover:text-terracotta">
+                      Full details<span className="sr-only">: {g.name}</span>
+                    </Link>
+                    <button type="button" onClick={closeInspect} className="label hover:text-terracotta">
+                      ← Back to rack
+                    </button>
+                  </div>
+                  <p className="micro mt-4 text-steel-deep">
+                    {site.payments.join(" · ")} <span aria-hidden className="mx-1.5 text-carbon/25">|</span> Free shipping over{" "}
+                    {formatINR(site.freeShippingOver)} <span aria-hidden className="mx-1.5 text-carbon/25">|</span>{" "}
+                    {site.returnsWindowDays}-day exchanges
+                  </p>
+                </m.div>
+              ) : (
+                <m.div
+                  key="browse"
+                  initial={reduced ? false : { opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={reduced ? undefined : { opacity: 0, y: -8 }}
+                  transition={{ duration: 0.35, ease: EASE_OUT }}
+                  className="flex flex-col items-center"
+                >
+                  <div className="flex items-center justify-center gap-3">
+                    <button
+                      type="button"
+                      aria-label="Previous piece"
+                      onClick={() => activate((active + pieces.length - 1) % pieces.length)}
+                      className="btn btn-ghost size-11 !p-0"
+                    >
+                      ←
+                    </button>
+                    <Link href={collection} className="btn btn-carbon">
+                      {audience === "Unisex" ? "Shop the collection" : `Shop ${audience.toLowerCase()}`}
+                    </Link>
+                    <button
+                      type="button"
+                      aria-label="Next piece"
+                      onClick={() => activate((active + 1) % pieces.length)}
+                      className="btn btn-ghost size-11 !p-0"
+                    >
+                      →
+                    </button>
+                  </div>
+                  <button
+                    ref={focusOnMount("inspect")}
+                    type="button"
+                    onClick={openInspect}
+                    className="label mt-4 underline decoration-carbon/30 underline-offset-4 hover:text-terracotta"
+                  >
+                    Inspect front &amp; back<span className="sr-only">: {g.name}</span>
+                  </button>
+                  <p className="serif-note mt-5 text-sm text-steel-deep">Tap or hover a hanger · tap again to flip it · drag to browse</p>
+                </m.div>
+              )}
+            </AnimatePresence>
           </div>
-          <Link
-            href={`/product/${g.slug}`}
-            className="label mt-4 underline decoration-carbon/30 underline-offset-4 hover:text-terracotta"
-          >
-            Quick view<span className="sr-only">: {g.name}</span>
-          </Link>
-          <p className="serif-note mt-5 text-sm text-steel-deep">Tap or hover a hanger · tap again to flip it · drag to browse</p>
         </div>
+    </>
+  );
+}
+
+/* ———————————————————————————— filters + rail ———————————————————————————— */
+
+const FILTERS: [RackFilter, string][] = [
+  ["all", "All"],
+  ["men", "Men"],
+  ["women", "Women"],
+];
+
+/**
+ * The hero: All | Men | Women pills over the rail. Each filter hangs its own lineup;
+ * switching re-hangs the rail so every piece drops onto it in turn.
+ */
+export default function GarmentRack() {
+  const [filter, setFilter] = useState<RackFilter>("all");
+  const [changed, setChanged] = useState(false);
+
+  return (
+    <LazyMotion features={loadMotionFeatures}>
+      <div className="rack">
+        <div className="mx-auto mb-3 flex max-w-7xl items-center gap-4 px-4 sm:px-6">
+          <span aria-hidden className="h-px flex-1 bg-carbon/10" />
+          <div role="group" aria-label="Show on the rack" className="flex gap-2">
+            {FILTERS.map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={filter === value}
+                onClick={() => {
+                  if (value === filter) return;
+                  setFilter(value);
+                  setChanged(true);
+                }}
+                className="pill label px-4 py-1.5"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <span aria-hidden className="h-px flex-1 bg-carbon/10" />
+        </div>
+        <Rail key={filter} lineup={RACKS[filter]} entrance={changed ? "all" : "siblings"} />
       </div>
     </LazyMotion>
   );
