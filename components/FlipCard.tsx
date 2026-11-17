@@ -1,16 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import GarmentCutout from "./GarmentCutout";
-import { formatINR, hasSide, type Garment, type Side } from "@/content/garments";
+import { useCart } from "@/lib/cart";
+import { badgeLabel, formatINR, hasSide, type Garment, type Side } from "@/content/garments";
 
-const BADGE_LABEL: Record<string, string> = {
-  new: "New",
-  "low-stock": "Low stock",
-  sale: "−20%",
-  waitlist: "Drop 02",
-};
+const QUICK_SIZES = ["S", "M", "L", "XL"];
 
 interface FlipCardProps {
   garment: Garment;
@@ -21,13 +17,28 @@ interface FlipCardProps {
 
 /**
  * Collection card. Front by default, back on hover (pointer devices) or via the
- * Front | Back switch, which also serves keyboard and touch users.
+ * Front | Back switch, which also serves keyboard and touch users. Live pieces get
+ * a slide-up quick-add size bar on hover / keyboard focus.
  */
 export default function FlipCard({ garment, priority = false, showDrop = false }: FlipCardProps) {
+  const { add } = useCart();
   const [side, setSide] = useState<Side | null>(null);
+  const [added, setAdded] = useState<string | null>(null);
+  const addedTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const canFlip = hasSide(garment, "back");
   const stateClass = side === "back" ? "is-back" : side === "front" ? "is-front" : "";
   const waitlist = garment.status === "waitlist";
+  const badge = badgeLabel(garment);
+  const quickSizes = garment.sizes.filter((s) => QUICK_SIZES.includes(s));
+
+  useEffect(() => () => clearTimeout(addedTimer.current), []);
+
+  const quickAdd = (size: string) => {
+    add(garment.slug, size, 1);
+    setAdded(size);
+    clearTimeout(addedTimer.current);
+    addedTimer.current = setTimeout(() => setAdded(null), 1400);
+  };
 
   return (
     <article className="group">
@@ -51,13 +62,13 @@ export default function FlipCard({ garment, priority = false, showDrop = false }
           </div>
         </Link>
 
-        {garment.badge && (
+        {badge && (
           <span
             className={`hang-tag absolute left-3 top-3 z-[3] ${
               garment.badge === "new" ? "hang-tag--terracotta" : garment.badge === "waitlist" ? "hang-tag--cobalt" : ""
             }`}
           >
-            {garment.stockNote ?? BADGE_LABEL[garment.badge]}
+            {badge}
           </span>
         )}
 
@@ -83,6 +94,32 @@ export default function FlipCard({ garment, priority = false, showDrop = false }
                 </button>
               );
             })}
+          </div>
+        )}
+
+        {/* quick-add size bar */}
+        {garment.status === "live" && quickSizes.length > 0 && (
+          <div className={`pointer-events-none absolute inset-x-0 ${canFlip ? "bottom-12" : "bottom-2"} z-[3] translate-y-2 px-2 opacity-0 transition-[opacity,translate] duration-300 ease-[var(--ease-out)] group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100 group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100`}>
+            <div role="group" aria-label={`Quick add ${garment.name}`} className="flex items-center justify-center gap-1 rounded-full bg-alabaster/95 p-1 shadow-[var(--shadow-lift)] backdrop-blur-sm lg:justify-start">
+              <span className="micro hidden pl-3 pr-1 text-steel-deep lg:inline" aria-live="polite">
+                {added ? "Added" : "Quick add"}
+              </span>
+              <div className="flex gap-1 lg:ml-auto">
+                {quickSizes.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    aria-label={`Add size ${s} to bag`}
+                    onClick={() => quickAdd(s)}
+                    className={`tabular size-7 rounded-full text-[0.65rem] font-semibold transition-colors ${
+                      added === s ? "bg-terracotta text-alabaster" : "hover:bg-carbon hover:text-alabaster"
+                    }`}
+                  >
+                    {added === s ? "✓" : s}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>

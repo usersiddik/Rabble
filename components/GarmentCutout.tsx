@@ -1,11 +1,11 @@
 import Image from "next/image";
-import GarmentArt from "./GarmentArt";
+import GarmentRender, { type GarmentRenderProps, type GarmentView, type TagTone } from "./GarmentRender";
 import type { Garment, Side } from "@/content/garments";
 
 /**
  * One garment, one side. Renders cutout photography when the catalogue has it
- * (`frontImage` / `backImage` / `sidePreview`), otherwise the illustrated placeholder.
- * Components never need to know which one they got.
+ * (`frontImage` / `backImage` / `sidePreview`), otherwise the procedural studio
+ * render (<GarmentRender />). Components never need to know which one they got.
  */
 
 interface GarmentCutoutProps {
@@ -13,13 +13,32 @@ interface GarmentCutoutProps {
   side?: Side | "side";
   hanger?: boolean;
   tag?: string;
-  tagTone?: "carbon" | "terracotta" | "cobalt";
+  tagTone?: TagTone;
   className?: string;
   /** mark as LCP candidate when photography is present */
   priority?: boolean;
   sizes?: string;
   /** accessible name; defaults to "<name> — <side>" */
   alt?: string;
+}
+
+/** Catalogue garment → <GarmentRender /> props for one view (colours, kind, ink, print placement). */
+export function renderProps(garment: Garment, view: GarmentView): GarmentRenderProps {
+  const { art, print } = garment;
+  return {
+    kind: art.kind,
+    view,
+    body: art.colors.body,
+    shade: art.colors.shade,
+    detail: art.colors.detail,
+    ink: print.inkHex,
+    print: view === "front" ? print.front : view === "back" ? print.back : undefined,
+  };
+}
+
+/** The photo slot for a view, if the catalogue has one. */
+export function photoFor(garment: Garment, view: GarmentView): string | undefined {
+  return view === "front" ? garment.frontImage : view === "back" ? garment.backImage : garment.sidePreview;
 }
 
 export default function GarmentCutout({
@@ -33,8 +52,7 @@ export default function GarmentCutout({
   sizes = "(min-width: 1024px) 25vw, 50vw",
   alt,
 }: GarmentCutoutProps) {
-  const photo =
-    side === "front" ? garment.frontImage : side === "back" ? garment.backImage : garment.sidePreview;
+  const photo = photoFor(garment, side);
   const label = alt ?? `${garment.name} in ${garment.color} — ${side}`;
 
   if (photo) {
@@ -45,20 +63,13 @@ export default function GarmentCutout({
     );
   }
 
-  const artSide: Side = side === "back" ? "back" : "front";
-  const placement = artSide === "front" ? garment.print.front : garment.print.back;
-
   return (
-    <GarmentArt
-      kind={garment.art.kind}
-      colors={garment.art.colors}
-      side={artSide}
-      print={placement}
-      ink={garment.print.inkHex}
+    <GarmentRender
+      {...renderProps(garment, side === "side" ? "side" : side)}
       hanger={hanger}
       tag={tag}
       tagTone={tagTone}
-      title={label}
+      title={label || undefined}
       className={className}
     />
   );

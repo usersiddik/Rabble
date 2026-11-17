@@ -2,21 +2,21 @@
  * The catalogue. Typed so real products drop in later without touching components.
  *
  * Every garment carries:
- *  - `art`         an illustrated front/back fallback (drawn by <GarmentArt />)
+ *  - `art`         the procedural studio render (drawn by <GarmentRender />)
  *  - `frontImage`, `backImage`, `sidePreview`
  *                  optional photography slots. When present, <GarmentCutout /> renders
  *                  the photo instead of the illustration — nothing else changes.
  *  - `print`       the print spec block shown on the product page (ink, GSM, placement in cm)
  */
 
-import type { GarmentColors, GarmentKind } from "@/components/GarmentArt";
+import type { GarmentColors, GarmentKind } from "@/components/GarmentRender";
 
 export type Gender = "men" | "women" | "all";
 export type Category = "Tees" | "Sweats & Hoods" | "Jackets";
 export type GarmentStatus = "live" | "waitlist" | "sold-out";
 export type Side = "front" | "back";
 
-/** The artwork that goes on the garment. Rendered by <GarmentArt /> in the illustrated fallback. */
+/** The artwork that goes on the garment. Rendered by <GarmentRender /> when there's no photography. */
 export type PrintMark =
   | { type: "wordmark"; text: string }
   | { type: "lines"; lines: string[] }
@@ -542,6 +542,18 @@ export function related(garment: Garment, count = 4): Garment[] {
 
 export function hasSide(garment: Garment, side: Side): boolean {
   return side === "front" ? true : Boolean(garment.print.back || garment.backImage);
+}
+
+const BADGE_LABEL: Record<NonNullable<Garment["badge"]>, string> = {
+  new: "New",
+  "low-stock": "Low stock",
+  sale: "−20%",
+  waitlist: "Drop 02",
+};
+
+/** The hang-tag copy for a garment's badge: its stock note if it has one. */
+export function badgeLabel(garment: Garment): string | undefined {
+  return garment.badge && (garment.stockNote ?? BADGE_LABEL[garment.badge]);
 }
 
 export function formatINR(value: number): string {

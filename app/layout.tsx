@@ -3,6 +3,7 @@ import { Archivo, Instrument_Serif } from "next/font/google";
 import localFont from "next/font/local";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { GarmentDefs } from "@/components/GarmentRender";
 import BagDrawer from "@/components/BagDrawer";
 import JsonLd from "@/components/JsonLd";
 import { CartProvider } from "@/lib/cart";
@@ -86,6 +87,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en-IN" className={`${archivo.variable} ${archivoDisplay.variable} ${instrument.variable}`}>
       <body>
         <JsonLd data={orgLd} />
+        <GarmentDefs />
         <CartProvider>
           <Header />
           <main id="main" tabIndex={-1} className="outline-none">

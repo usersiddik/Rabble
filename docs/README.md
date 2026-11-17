@@ -5,7 +5,8 @@ Re-capture after changes: build, `npx next start -p 3100`, then shoot with `--fo
 
 | # | Area | Desktop | Mobile |
 | - | ---- | ------- | ------ |
-| 1 | Home: garment-rack hero, front/back, drop teaser | [01-home-desktop](screenshots/01-home-desktop.png) | [01-home-mobile](screenshots/01-home-mobile.png) |
+| 1 | Home: garment-rack hero, Print Lab / Atelier showcase, front/back, drop teaser | [01-home-desktop](screenshots/01-home-desktop.png) | [01-home-mobile](screenshots/01-home-mobile.png) |
+| 1 | Garment rack hero: default, Back flipped, mobile | [10-rack-hero-desktop](screenshots/10-rack-hero-desktop.png) · [10-rack-hero-back](screenshots/10-rack-hero-back.png) | [10-rack-hero-mobile](screenshots/10-rack-hero-mobile.png) |
 | 1 | Brand identity system (`/brand`) | [02-brand-desktop](screenshots/02-brand-desktop.png) | — |
 | 2 | Manifesto & About (`/about`) | [03-about-desktop](screenshots/03-about-desktop.png) | [03-about-mobile](screenshots/03-about-mobile.png) |
 | 3 | Collection: sticky filters, Front/Back flip cards, drop chapters | [04-collection-desktop](screenshots/04-collection-desktop.png) | [04-collection-mobile](screenshots/04-collection-mobile.png) |

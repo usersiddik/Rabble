@@ -5,6 +5,7 @@
    Documented live at /brand. Change here, not in components.
 
    palette   alabaster · carbon · steel · terracotta · cobalt
+             (+ sand · ivory for the atelier card)
    type      Archivo (expanded, 800) for display · Instrument Serif (italic) for notes
    motion    one easing, three durations
    ———————————————————————————————————————————————— */
@@ -26,6 +27,9 @@
   --color-cobalt-deep: #162fa8;
   /* cobalt for text on carbon */
   --color-cobalt-light: #8fa0ff;
+  /* atelier edit: warm paper for the women's card */
+  --color-sand: #e8dfd0;
+  --color-ivory: #f8f4ec;
 
   /* — type — */
   --font-sans: "Rupee", var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
@@ -462,6 +466,91 @@ body {
   background: var(--color-cobalt);
 }
 
+/* ——— glass header ——— */
+
+.glass {
+  background: color-mix(in srgb, var(--color-alabaster) 84%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  backdrop-filter: saturate(160%) blur(14px);
+}
+
+/* ——— garment rack (homepage hero) ——— */
+
+/*
+  Slot sizes per breakpoint. The rack reads the same numbers in JS once it mounts;
+  until then these keep the server render at its final size, so nothing shifts.
+*/
+.rack {
+  --rack-active: 228px;
+  --rack-side: 66px;
+  --rack-gap: 4px;
+  --rack-h: calc(var(--rack-active) * 440 / 300);
+}
+@media (min-width: 640px) {
+  .rack {
+    --rack-active: 340px;
+    --rack-side: 96px;
+    --rack-gap: 8px;
+  }
+}
+@media (min-width: 1024px) {
+  .rack {
+    --rack-active: 380px;
+    --rack-side: 108px;
+    --rack-gap: 10px;
+  }
+}
+.rack-track {
+  padding-inline: max(1.5rem, calc(50% - var(--rack-active) / 2));
+}
+@media (min-width: 1024px) {
+  .rack-track {
+    padding-inline: 2.5rem;
+  }
+}
+
+.rail-bar {
+  background: linear-gradient(180deg, #7c7c81 0%, #4b4b50 30%, #2a2a2d 65%, #141416 100%);
+  box-shadow:
+    0 1px 0 rgb(255 255 255 / 0.5) inset,
+    0 2px 4px rgb(0 0 0 / 0.28),
+    0 10px 18px rgb(0 0 0 / 0.08);
+}
+.rail-bracket {
+  position: absolute;
+  top: -9px;
+  width: 14px;
+  height: 24px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #3a3a3d, #8e8e93 50%, #3a3a3d);
+  box-shadow: 0 2px 4px rgb(0 0 0 / 0.3);
+}
+.rail-bracket::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 4px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 9999px;
+  background: #1a1a1c;
+  box-shadow: 0 12px 0 #1a1a1c;
+}
+
+/* the edge-on shading fades in while a hanger is turned sideways */
+.garment-side-shade {
+  opacity: 0;
+  transition: opacity 0.6s var(--ease-out);
+}
+.rack-slot[aria-pressed="false"] .garment-side-shade {
+  opacity: 1;
+}
+
+.garment-shadow {
+  filter: drop-shadow(0 25px 35px rgb(0 0 0 / 0.14)) drop-shadow(0 4px 6px rgb(0 0 0 / 0.08));
+}
+
 /* ——— flip card (front | back) ——— */
 
 .flip {
@@ -540,7 +629,8 @@ body {
     animation: none;
   }
   .img-frame img,
-  .flip-inner {
+  .flip-inner,
+  .garment-side-shade {
     transition: none;
   }
   .parallax {

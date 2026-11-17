@@ -1,4 +1,5 @@
 import Link from "next/link";
+import IntentLink from "@/components/IntentLink";
 import { NoiseBars } from "@/components/Noise";
 
 export default function NotFound() {
@@ -9,9 +10,9 @@ export default function NotFound() {
       <h1 className="display display-xl mt-4">Lost the crowd.</h1>
       <p className="prose-editorial mt-4 max-w-sm">This page doesn&rsquo;t exist — or it sold out and left no forwarding address.</p>
       <div className="mt-8 flex gap-3">
-        <Link href="/" className="btn btn-carbon">
+        <IntentLink href="/" className="btn btn-carbon">
           Back to the noise
-        </Link>
+        </IntentLink>
         <Link href="/new-arrivals" className="btn btn-ghost">
           Shop Drop 01
         </Link>

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import IntentLink from "./IntentLink";
 import { NoiseMark } from "./Noise";
 
 /**
@@ -45,9 +45,9 @@ export default function Wordmark({ variant = "horizontal", tone = "carbon", clas
 
   if (href) {
     return (
-      <Link href={href} aria-label="RABBLE home" className={`inline-flex ${className}`}>
+      <IntentLink href={href} aria-label="RABBLE home" className={`inline-flex ${className}`}>
         {inner}
-      </Link>
+      </IntentLink>
     );
   }
   return <span className={`inline-flex ${className}`}>{inner}</span>;

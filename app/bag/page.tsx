@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import IntentLink from "@/components/IntentLink";
 import { useState } from "react";
 import GarmentCutout from "@/components/GarmentCutout";
 import { useCart } from "@/lib/cart";
@@ -24,9 +25,9 @@ export default function BagPage() {
           <Link href="/new-arrivals" className="btn btn-carbon">
             Shop Drop 01
           </Link>
-          <Link href="/" className="btn btn-ghost">
+          <IntentLink href="/" className="btn btn-ghost">
             Back home
-          </Link>
+          </IntentLink>
         </div>
       </div>
     );

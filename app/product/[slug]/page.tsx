@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import IntentLink from "@/components/IntentLink";
 import { notFound } from "next/navigation";
 import FlipCard from "@/components/FlipCard";
 import GarmentViewer from "@/components/GarmentViewer";
@@ -68,9 +69,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <nav aria-label="Breadcrumb" className="label text-steel-deep">
         <ol className="flex flex-wrap gap-1.5">
           <li>
-            <Link href="/" className="hover:text-terracotta">
+            <IntentLink href="/" className="hover:text-terracotta">
               Home
-            </Link>
+            </IntentLink>
             <span aria-hidden> /</span>
           </li>
           <li>
